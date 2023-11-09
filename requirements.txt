@@ -1,0 +1,243 @@
+absl-py==0.11.0
+ackermann-msgs==2.0.2
+action-msgs==1.2.1
+action-tutorials-interfaces==0.20.3
+action-tutorials-py==0.20.3
+actionlib-msgs==4.2.3
+ament-cmake-test==1.3.5
+ament-copyright==0.12.8
+ament-cppcheck==0.12.8
+ament-cpplint==0.12.8
+ament-flake8==0.12.8
+ament-index-python==1.4.0
+ament-lint==0.12.8
+ament-lint-cmake==0.12.8
+ament-package==0.14.0
+ament-pep257==0.12.8
+ament-uncrustify==0.12.8
+ament-xmllint==0.12.8
+angles==1.15.0
+argcomplete==3.1.2
+Brotli @ file:///tmp/abs_ecyw11_7ze/croots/recipe/brotli-split_1659616059936/work
+builtin-interfaces==1.2.1
+cachetools==5.3.2
+casadi==3.6.3
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi @ file:///croot/cffi_1670423208954/work
+charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
+composition-interfaces==1.2.1
+contourpy @ file:///opt/conda/conda-bld/contourpy_1663827406301/work
+control-msgs==4.4.0
+controller-manager==2.32.0
+controller-manager-msgs==2.32.0
+cryptography @ file:///croot/cryptography_1694444244250/work
+cv-bridge==3.2.1
+cvxopt==1.3.2
+cycler @ file:///tmp/build/80754af9/cycler_1637851556182/work
+Cython==3.0.4
+demo-nodes-py==0.20.3
+diagnostic-msgs==4.2.3
+domain-coordinator==0.10.0
+example-interfaces==0.9.3
+examples-rclpy-executors==0.15.1
+examples-rclpy-minimal-action-client==0.15.1
+examples-rclpy-minimal-action-server==0.15.1
+examples-rclpy-minimal-client==0.15.1
+examples-rclpy-minimal-publisher==0.15.1
+examples-rclpy-minimal-service==0.15.1
+examples-rclpy-minimal-subscriber==0.15.1
+exceptiongroup==1.1.3
+filelock @ file:///croot/filelock_1672387128942/work
+flake8==6.1.0
+flake8-blind-except==0.2.1
+flake8-builtins==2.1.0
+flake8-class-newline==1.6.0
+flake8-comprehensions==3.14.0
+flake8-deprecated==2.1.0
+flake8-docstrings==1.7.0
+flake8-import-order==0.18.2
+flake8-quotes==3.3.2
+fonttools==4.25.0
+gazebo-msgs==3.7.0
+generate-parameter-library-py==0.3.6
+geometry-msgs==4.2.3
+gmpy2 @ file:///tmp/build/80754af9/gmpy2_1645455533097/work
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+grpcio==1.59.2
+idna @ file:///croot/idna_1666125576474/work
+image-geometry==3.2.1
+interactive-markers==2.3.2
+Jinja2 @ file:///croot/jinja2_1666908132255/work
+joint-state-publisher==2.4.0
+joint-state-publisher-gui==2.4.0
+kinpy==0.2.2
+kiwisolver @ file:///croot/kiwisolver_1672387140495/work
+laser-geometry==2.4.0
+launch==1.0.4
+launch-param-builder==0.1.1
+launch-ros==0.19.6
+launch-testing==1.0.4
+launch-testing-ros==0.19.6
+launch-xml==1.0.4
+launch-yaml==1.0.4
+lifecycle-msgs==1.2.1
+logging-demo==0.20.3
+map-msgs==2.1.0
+Markdown==3.5.1
+MarkupSafe @ file:///opt/conda/conda-bld/markupsafe_1654597864307/work
+matplotlib @ file:///croot/matplotlib-suite_1693812469450/work
+mccabe==0.7.0
+message-filters==4.3.3
+mkl-fft @ file:///croot/mkl_fft_1695058164594/work
+mkl-random @ file:///croot/mkl_random_1695059800811/work
+mkl-service==2.4.0
+moveit-configs-utils==2.5.5
+moveit-msgs==2.2.1
+mpmath @ file:///croot/mpmath_1690848262763/work
+munkres==1.1.4
+nav-msgs==4.2.3
+networkx @ file:///croot/networkx_1690561992265/work
+numpy==1.26.1
+oauthlib==3.2.2
+object-recognition-msgs==2.0.0
+octomap-msgs==2.0.0
+opencv-contrib-python==4.7.0.68
+opencv-python==4.7.0.68
+osqp==0.6.3
+osrf-pycommon==2.0.2
+packaging @ file:///croot/packaging_1693575174725/work
+pandas==2.1.2
+pcl-msgs==1.0.0
+pendulum-msgs==0.20.3
+Pillow @ file:///croot/pillow_1696580024257/work
+ply==3.11
+protobuf==4.23.4
+pyasn1==0.5.0
+pyasn1-modules==0.3.0
+pycodestyle==2.11.1
+pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
+pyflakes==3.1.0
+pyOpenSSL @ file:///croot/pyopenssl_1690223430423/work
+pyoptas @ file:///home/thy/ros2_ws/src/optas
+pyparsing @ file:///opt/conda/conda-bld/pyparsing_1661452539315/work
+PyQt5-sip==12.11.0
+PySocks @ file:///home/builder/ci_310/pysocks_1640793678128/work
+pytest==7.4.2
+pytest-cov==4.1.0
+pytest-repeat==0.9.3
+pytest-rerunfailures==12.0
+pytest-runner==6.0.0
+python-dateutil==2.8.2
+python-qt-binding==1.1.1
+PyYAML==6.0.1
+pyzed @ file:///tmp/selfgz18625/pyzed-3.8-cp310-cp310-linux_x86_64.whl
+qdldl==0.1.7.post0
+qt-dotgraph==2.2.2
+qt-gui==2.2.2
+qt-gui-cpp==2.2.2
+qt-gui-py-common==2.2.2
+quality-of-service-demo-py==0.20.3
+rcl-interfaces==1.2.1
+rclpy==3.3.10
+rcutils==5.1.3
+requests @ file:///croot/requests_1690400202158/work
+requests-oauthlib==1.3.1
+resource-retriever==3.1.1
+rmw-dds-common==1.6.0
+ros2action==0.18.7
+ros2bag==0.15.8
+ros2cli==0.18.7
+ros2component==0.18.7
+ros2controlcli==2.32.0
+ros2doctor==0.18.7
+ros2interface==0.18.7
+ros2launch==0.19.6
+ros2lifecycle==0.18.7
+ros2multicast==0.18.7
+ros2node==0.18.7
+ros2param==0.18.7
+ros2pkg==0.18.7
+ros2run==0.18.7
+ros2service==0.18.7
+ros2topic==0.18.7
+rosbag2-interfaces==0.15.8
+rosbag2-py==0.15.8
+rosgraph-msgs==1.2.1
+rosidl-adapter==3.1.5
+rosidl-cli==3.1.5
+rosidl-cmake==3.1.5
+rosidl-generator-c==3.1.5
+rosidl-generator-cpp==3.1.5
+rosidl-generator-py==0.14.4
+rosidl-parser==3.1.5
+rosidl-runtime-py==0.9.3
+rosidl-typesupport-c==2.0.1
+rosidl-typesupport-cpp==2.0.1
+rosidl-typesupport-fastrtps-c==2.2.1
+rosidl-typesupport-fastrtps-cpp==2.2.1
+rosidl-typesupport-introspection-c==3.1.5
+rosidl-typesupport-introspection-cpp==3.1.5
+rpyutils==0.2.1
+rqt-action==2.0.1
+rqt-bag==1.1.4
+rqt-bag-plugins==1.1.4
+rqt-console==2.0.2
+rqt-graph==1.3.0
+rqt-gui==1.1.5
+rqt-gui-py==1.1.5
+rqt-msg==1.2.0
+rqt-plot==1.1.2
+rqt-publisher==1.5.0
+rqt-py-common==1.1.5
+rqt-py-console==1.0.2
+rqt-reconfigure==1.1.1
+rqt-service-caller==1.0.5
+rqt-shell==1.0.2
+rqt-srv==1.0.3
+rqt-topic==1.5.0
+rsa==4.9
+scripts==3.7.0
+seaborn==0.13.0
+sensor-msgs==4.2.3
+sensor-msgs-py==4.2.3
+shape-msgs==4.2.3
+sip @ file:///tmp/abs_44cd77b_pu/croots/recipe/sip_1659012365470/work
+six @ file:///tmp/build/80754af9/six_1644875935023/work
+srdfdom==2.0.4
+sros2==0.10.4
+statistics-msgs==1.2.1
+std-msgs==4.2.3
+std-srvs==4.2.3
+stereo-msgs==4.2.3
+sympy @ file:///croot/sympy_1668202399572/work
+teleop-twist-keyboard==2.3.2
+tensorboard==2.15.1
+tensorboard-data-server==0.7.2
+tf2-geometry-msgs==0.25.4
+tf2-kdl==0.25.4
+tf2-msgs==0.25.4
+tf2-py==0.25.4
+tf2-ros-py==0.25.4
+tf2-tools==0.25.4
+toml @ file:///tmp/build/80754af9/toml_1616166611790/work
+tomli==2.0.1
+topic-monitor==0.20.3
+torch==1.12.0
+torchaudio==2.1.0
+torchvision==0.16.0
+tornado @ file:///croot/tornado_1696936946304/work
+trajectory-msgs==4.2.3
+transformations==2020.1.1
+triton==2.1.0
+turtlesim==1.4.2
+typing_extensions==4.8.0
+tzdata==2023.3
+unique-identifier-msgs==2.2.1
+urdf-parser-py==0.0.4
+urdfdom-py==1.2.1
+urllib3 @ file:///croot/urllib3_1698257533958/work
+visualization-msgs==4.2.3
+vtk==9.2.6
+Werkzeug==3.0.1
+xacro==2.0.8
