@@ -169,4 +169,4 @@ dependencies:
       - tensorboard==2.15.1
       - tensorboard-data-server==0.7.2
       - werkzeug==3.0.1
-prefix: /home/thy/miniconda3/envs/KFlearn
+
