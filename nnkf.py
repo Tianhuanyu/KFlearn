@@ -203,7 +203,8 @@ class KalmanNet(ESKF_Torch):
         self.FC2 = nn.Sequential(
                 nn.Linear(self.d_input_FC2, self.d_hidden_FC2),
                 nn.ReLU(),
-                nn.Linear(self.d_hidden_FC2, self.d_output_FC2)).to(self.device)
+                nn.Linear(self.d_hidden_FC2, self.d_output_FC2)
+                ).to(self.device)
 
         # Fully connected 3
         self.d_input_FC3 = self.d_hidden_S + self.d_output_FC2
@@ -217,7 +218,8 @@ class KalmanNet(ESKF_Torch):
         self.d_output_FC4 = self.d_hidden_Sigma
         self.FC4 = nn.Sequential(
                 nn.Linear(self.d_input_FC4, self.d_output_FC4),
-                nn.ReLU()).to(self.device)
+                nn.ReLU()
+                ).to(self.device)
         
         # Fully connected 5
         self.d_input_FC5 = self.m
@@ -424,6 +426,8 @@ class KalmanNet(ESKF_Torch):
 
     def reset_state(self, init_state):
         self.state = init_state
+        self.covariance = torch.diag(torch.tensor([0.001]*3+
+                            [0.002]*3, requires_grad=True))
         self.init_hidden_KNet()
 
 

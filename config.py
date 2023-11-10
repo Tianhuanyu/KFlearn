@@ -41,11 +41,11 @@ def general_settings():
                         help='if True, use CUDA')
     parser.add_argument('--n_steps', type=int, default=1000, metavar='N_steps',
                         help='number of training steps (default: 1000)')
-    parser.add_argument('--n_batch', type=int, default=50, metavar='N_B',
-                        help='input batch size for training (default: 50)')
-    parser.add_argument('--n_seq', type=int, default=5, metavar='N_Se',
+    parser.add_argument('--n_batch', type=int, default=80, metavar='N_B',
+                        help='input batch size for training (default: 80)')
+    parser.add_argument('--n_seq', type=int, default=80, metavar='N_Se',
                         help='input batch size for training (default: 20)')
-    parser.add_argument('--lr', type=float, default=1e-2, metavar='LR',
+    parser.add_argument('--lr', type=float, default=1e-3, metavar='LR',
                         help='learning rate (default: 1e-3)')
     parser.add_argument('--wd', type=float, default=1e-4, metavar='WD',
                         help='weight decay (default: 1e-4)')
