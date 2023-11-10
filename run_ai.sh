@@ -1,17 +1,15 @@
 #!/bin/bash
-bn=$(basename "$1")
-# # clean the file name for the job name: remove the .sh extension, replace "_" with "-"
-JOB_NAME=$(echo "$bn" | sed "s/\..*//" | sed "s/_/-/g")
-
-runai delete job kf-ht$1
-# read bash scripts about parsing the arguments
-runai submit kf-ht$1 \
-       --image aicregistry:5000/ht23:KF-learn \
+# bn=$(basename "$1")
+# docker pull kflrnimage
+runai delete job kflearn$1
+runai submit --name kflearn \
+       --image nvcr.io/nvidia/pytorch:22.11-py3 \
        --run-as-user \
        --gpu 1 \
-       --project ht23 \
-       -v /nfs:/nfs \
-       --large-shm \
+       --project sie-ht23 \
+        -v /mnt/dgxstorage/ht23/data:/mnt/data \
+        --large-shm \
        --backoff-limit 0 \
-       --command -- bash /nfs/home/ht23/KF_learn/run_ai_py.sh \
+       --command -- bash /home/ht23/KFlearn/run_ai_py.sh 
       
+       # -v /:/ \

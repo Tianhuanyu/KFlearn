@@ -93,6 +93,50 @@ class Pipeline:
                 gt = gt.permute(2,1,0)
                 print("error = {0}".format(torch.norm(gt[:,0:3,:]-state[:,0:3,:])))
 
+    def loss_with_acc(self,out,out_p,out_p2, y,x):
+        return 100.0*(self.criterion(out[:,0:3], y[:,0:3]) + 
+                            0.2* self.criterion(out[:,3:7], y[:,3:7])) + 1.0*(
+                                self.criterion(out[:,0:3]+out_p2[:,0:3], 2.0*out_p[:,0:3]) + 
+                            0.2* self.criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 0.0*(
+                                self.criterion(x[:,0:3], out[:,0:3]) + 0.2* self.criterion(x[:,3:7], out[:,3:7])
+                            )
+
+    def lossinTraj(self, init_state, x_traj, y_traj):
+        loss = torch.tensor(0.0)
+        loss_c = torch.tensor(0.0)
+        self.model.reset_state(init_state)
+        out_p = torch.zeros_like(init_state).squeeze(2)
+        out_p2 = torch.zeros_like(init_state).squeeze(2)
+
+        x_p = torch.zeros_like(init_state).squeeze(2)
+        x_p2 = torch.zeros_like(init_state).squeeze(2)
+        for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
+            # print("i =",i)
+            # print("x = ",x)
+            out = self.model(x).squeeze(2)
+
+            y = y.permute(1,0)
+            x = x.permute(1,0)
+
+            """
+            Loss 1.0
+            """
+
+            loss_c += self.loss_with_acc(x[:,0:7],x_p, x_p2, y,x)
+            
+            """
+            Loss with min acc
+            """
+            loss += self.loss_with_acc(out,out_p, out_p2, y,x)
+            
+            out_p2 = out_p
+            out_p = out
+
+            x_p2 = x_p
+            x_p = x[:,0:7]
+
+        return loss, loss_c
+
     def trainNetwork(self):
         self.learningRate = self.args.lr
         self.weightDecay = self.args.wd
@@ -100,111 +144,114 @@ class Pipeline:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learningRate, weight_decay=self.weightDecay)
 
         print("Number of trainable parameters for KNet pass 1:",sum(p.numel() for p in self.model.parameters() if p.requires_grad))
-        data_test = DataLoader(self.data_loader_train,
+        data_train = DataLoader(self.data_loader_train,
                         batch_size=self.args.n_batch, 
                         shuffle=True, 
                         num_workers=4)
-        criterion = torch.nn.MSELoss(reduction='mean')
+        
+
+        data_valid = DataLoader(self.data_loader_valid,
+                        batch_size=self.args.n_batch, 
+                        shuffle=True, 
+                        num_workers=4)
+        
+
+        self.criterion = torch.nn.MSELoss(reduction='mean')
         
         writer = SummaryWriter('runs/experiment_1')
 
-        def loss_with_acc(out,out_p,out_p2, y):
-            return 100.0*(criterion(out[:,0:3], y[:,0:3]) + 
-                             0.2* criterion(out[:,3:7], y[:,3:7])) + 1.0*(
-                                 criterion(out[:,0:3]+out_p2[:,0:3], 2.0*out_p[:,0:3]) + 
-                             0.2* criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 0.0*(
-                                 criterion(x[:,0:3], out[:,0:3]) + 0.2* criterion(x[:,3:7], out[:,3:7])
-                             )
 
-
-
-        def quaternion_loss(q_pred, q_true):
-            # 确保四元数是归一化的
-            # q_pred = q_pred / q_pred.norm(p=2, dim=1, keepdim=True)
-            # q_true = q_true / q_true.norm(p=2, dim=1, keepdim=True)
-
-            # 计算四元数之间的点积
-            dot_product = (q_pred * q_true).sum(dim=1)
-
-            # 解决符号二义性
-            dot_product = torch.abs(dot_product)
-
-            # 计算角度损失
-            loss = 1 - dot_product**2
-            return loss.mean()  # 返回批次的平均损失
         # criterion_quat = quaternion_loss()
 
         # i=0
 
         for epoch in range(10):
-            for tj_id, (_x_traj, _y_traj) in enumerate(data_test):
+
+            self.model.train()
+            for tj_id, (_x_traj, _y_traj) in enumerate(data_train):
                 self.optimizer.zero_grad()
                 x_traj = _x_traj.permute(1, 2, 0)
                 y_traj = _y_traj.permute(1, 2, 0)
-                loss = torch.tensor(0.0)
-                loss_c = torch.tensor(0.0)
+
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
-
                 if(init_state.size()[0] != self.args.n_batch):
                     break
 
+                loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
+
                 
-                self.model.reset_state(init_state)
-                out_p = torch.zeros_like(init_state).squeeze(2)
-                out_p2 = torch.zeros_like(init_state).squeeze(2)
+                # loss = torch.tensor(0.0)
+                # loss_c = torch.tensor(0.0)
+                # self.model.reset_state(init_state)
+                # out_p = torch.zeros_like(init_state).squeeze(2)
+                # out_p2 = torch.zeros_like(init_state).squeeze(2)
 
-                x_p = torch.zeros_like(init_state).squeeze(2)
-                x_p2 = torch.zeros_like(init_state).squeeze(2)
-                for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
-                    # print("i =",i)
-                    # print("x = ",x)
-                    out = self.model(x).squeeze(2)
+                # x_p = torch.zeros_like(init_state).squeeze(2)
+                # x_p2 = torch.zeros_like(init_state).squeeze(2)
+                # for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
+                #     # print("i =",i)
+                #     # print("x = ",x)
+                #     out = self.model(x).squeeze(2)
 
-                    #TODO
-                    # untimeError: The expanded size of the tensor (1) must match the existing size (4) at non-singleton dimension 0.  Target sizes: [1, 3, 1].  Tensor sizes: [4, 3, 1]
+                #     y = y.permute(1,0)
+                #     x = x.permute(1,0)
 
-                    # print("out = ",out.size())
-                    # print("init_state = ",init_state.size())
-                    # print("y = ",y)
-                    # print("x = ",x)
-                    y = y.permute(1,0)
-                    x = x.permute(1,0)
+                #     """
+                #     Loss 1.0
+                #     """
 
-                    """
-                    Loss 1.0
-                    """
-                    # loss += 0.7*(criterion(out[:,0:3], y[:,0:3]) + 
-                    #          0.1* criterion(out[:,3:7], y[:,3:7])) + 0.3*(
-                    #              criterion(x[:,0:3], out[:,0:3]) + 
-                    #          0.1* criterion(x[:,3:7], out[:,3:7]))
                              
                     
-                    loss_c += loss_with_acc(x[:,0:7],x_p, x_p2, y)
+                #     loss_c += loss_with_acc(x[:,0:7],x_p, x_p2, y)
                     
-                    """
-                    Loss with min acc
-                    """
-                    loss += loss_with_acc(out,out_p, out_p2, y)
+                #     """
+                #     Loss with min acc
+                #     """
+                #     loss += loss_with_acc(out,out_p, out_p2, y)
                     
-                    out_p2 = out_p
-                    out_p = out
+                #     out_p2 = out_p
+                #     out_p = out
 
-                    x_p2 = x_p
-                    x_p = x[:,0:7]
+                #     x_p2 = x_p
+                #     x_p = x[:,0:7]
                     
                     
-                    # print(f'Epoch {epoch+1}, Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}')
-                    # if(ptid == 20):
-                    #     raise ValueError("Num ERR")
+
 
                 loss.backward(retain_graph=True)
                 self.optimizer.step()
 
                 # Print statistics
                 # if (epoch+1) % 10 == 0:
-                writer.add_scalar('Loss/train', loss, epoch * len(data_test) + tj_id)
+                writer.add_scalar('Loss/train', loss, epoch * len(data_train) + tj_id)
                 print(f'Epoch {epoch+1}, Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}')
+
+            self.model.eval()
+            with torch.no_grad():
+                val_loss = 0.0
+                val_loss_c = 0.0
+                for tj_id, (_x_traj, _y_traj) in enumerate(data_valid):
+                    self.optimizer.zero_grad()
+                    x_traj = _x_traj.permute(1, 2, 0)
+                    y_traj = _y_traj.permute(1, 2, 0)
+
+
+                    init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                    if(init_state.size()[0] != self.args.n_batch):
+                        break
+
+                    loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
+                    val_loss += loss
+                    val_loss_c += loss_c
+                val_loss /= len(data_valid)
+                writer.add_scalar('Loss/valid', val_loss, epoch * len(data_valid) + tj_id)
+
+                
+
+
+                
+            
                 # if(loss.item() >1.0):
                 #     print("y = ",y)
                 #     print("x = ",x)
