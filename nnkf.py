@@ -363,10 +363,6 @@ class KalmanNet(ESKF_Torch):
         self.step_KGain_est(measurement)
         # Innovation
         dy = measurement - self.predict_state # [batch_size, n, 1]
-        # print("dy = ",dy)
-        # print("self.predict_state = ",self.predict_state)
-
-        # print("self.KGain = ",self.KGain)
 
         # Compute the 1-st posterior moment
         INOV = torch.bmm(self.KGain, dy)

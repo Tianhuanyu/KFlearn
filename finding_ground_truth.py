@@ -100,6 +100,7 @@ class RegistrationData:
         If you want tos see comparison of traj dst and ground truth, commit out this.
         """
         # RegistrationData.view_Cartesian_pose(self._pq_dst[0], self.ground_truth[0])
+        RegistrationData.view_channels(self._pq_dst[0], self.ground_truth[0])
 
         print("Point 1 {0}".format(self._pq_dst[0][0]))
         print("Point 1_gt {0}".format(self.ground_truth[0][0]))
@@ -513,6 +514,31 @@ class RegistrationData:
         # 显示图表
         plt.show()
 
+    @staticmethod
+    def view_channels(*measurements_list):
+        plt.figure()
+        for i, measurements in enumerate(measurements_list):
+            pos = [[] for i in range(7)]
+            for mes in measurements:
+                pos[0].append(mes[0])
+                pos[1].append(mes[1])
+                pos[2].append(mes[2])
+
+            plt.subplot(3, 1, 1)  # 三行一列，当前激活的是第一个图
+            plt.plot(pos[0])  # '-r' 表示红色实线
+            # plt.legend(loc='traj'+str(i))
+
+            plt.subplot(3, 1, 2)  # 三行一列，当前激活的是第一个图
+            plt.plot(pos[1])  # '-r' 表示红色实线
+            # plt.legend(loc='traj'+str(i))
+
+            plt.subplot(3, 1, 3)  # 三行一列，当前激活的是第一个图
+            plt.plot(pos[2])  # '-r' 表示红色实线
+            # plt.legend(loc='traj'+str(i))
+        # 自动调整子图间距
+        plt.tight_layout()
+        # 显示图形
+        plt.show()
 
 
 
