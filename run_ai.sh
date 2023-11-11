@@ -7,7 +7,6 @@ runai submit --name kflearn \
        --run-as-user \
        --gpu 1 \
        --project sie-ht23 \
-        -v /mnt/dgxstorage/ht23/data:/mnt/data \
         --large-shm \
        --backoff-limit 0 \
        --command -- bash /home/ht23/KFlearn/run_ai_py.sh 
