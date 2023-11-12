@@ -100,7 +100,7 @@ class RegistrationData:
         If you want tos see comparison of traj dst and ground truth, commit out this.
         """
         # RegistrationData.view_Cartesian_pose(self._pq_dst[0], self.ground_truth[0])
-        RegistrationData.view_channels(self._pq_dst[0], self.ground_truth[0])
+        # RegistrationData.view_channels(self._pq_dst[0], self.ground_truth[0])
 
         print("Point 1 {0}".format(self._pq_dst[0][0]))
         print("Point 1_gt {0}".format(self.ground_truth[0][0]))

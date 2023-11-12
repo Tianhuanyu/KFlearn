@@ -152,7 +152,7 @@ class RobotSensorFusion(SystemModel):
         return covariance.to(self.device)
     
     def _compute_control_matrix(self, dt):
-        S = torch.eye(self.error_state_size)*dt
+        S = torch.eye(self.error_state_size).to(self.device)*dt
 
         S = S.unsqueeze(0)
         S = S.repeat(self.n_batch, 1,1)
@@ -206,6 +206,9 @@ class RobotSensorFusion(SystemModel):
         return torch.tensor([w, x, y, z], requires_grad=True).unsqueeze(1).to(self.device)
     
     def _state_injection(self, dt, state, error_state):
+        dt = dt.to(self.device)
+        state = state.to(self.device)
+        error_state = error_state.to(self.device)
         true_state = torch.zeros_like(state)
         try:
             true_state[:,0:3,:] = state[:,0:3,:] + error_state[:,0:3,:]
@@ -219,7 +222,7 @@ class RobotSensorFusion(SystemModel):
         # output is not a quaterion vector
         for i in range(self.n_batch):
             dx1,dy1,dz1 = 0.5 * error_state[i,3:6,:]
-            dq1 = torch.tensor([0.0, dx1, dy1, dz1], requires_grad=True).unsqueeze(1)
+            dq1 = torch.tensor([0.0, dx1, dy1, dz1], requires_grad=True).unsqueeze(1).to(self.device)
             # print("dq1 = ",dq1.size())
             q1 = self.quaternion_multiply(state[i,3:7,:], dq1)*dt + state[i,3:7,:]
             # print("state[i,3:7,:] = ",state[i,3:7,:].size())

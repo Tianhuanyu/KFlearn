@@ -97,13 +97,13 @@ class Pipeline:
         return 100.0*(self.criterion(out[:,0:3], y[:,0:3]) + 
                             0.2* self.criterion(out[:,3:7], y[:,3:7])) + 1.0*(
                                 self.criterion(out[:,0:3]+out_p2[:,0:3], 2.0*out_p[:,0:3]) + 
-                            0.2* self.criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 0.0*(
+                            0.2* self.criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 1.0*(
                                 self.criterion(x[:,0:3], out[:,0:3]) + 0.2* self.criterion(x[:,3:7], out[:,3:7])
                             )
 
     def lossinTraj(self, init_state, x_traj, y_traj):
-        loss = torch.tensor(0.0)
-        loss_c = torch.tensor(0.0)
+        loss = torch.tensor(0.0).to(self.model.device)
+        loss_c = torch.tensor(0.0).to(self.model.device)
         self.model.reset_state(init_state)
         out_p = torch.zeros_like(init_state).squeeze(2)
         out_p2 = torch.zeros_like(init_state).squeeze(2)
@@ -143,7 +143,6 @@ class Pipeline:
         # self.optimizer = optim.Adam(self.model.parameters(), lr=self.learningRate, weight_decay=self.weightDecay)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learningRate, weight_decay=self.weightDecay)
 
-        print("Number of trainable parameters for KNet pass 1:",sum(p.numel() for p in self.model.parameters() if p.requires_grad))
         data_train = DataLoader(self.data_loader_train,
                         batch_size=self.args.n_batch, 
                         shuffle=True, 
@@ -155,6 +154,7 @@ class Pipeline:
                         shuffle=True, 
                         num_workers=4)
         
+        print("Number of trainable parameters for KNet pass 1:",sum(p.numel() for p in self.model.parameters() if p.requires_grad))
 
         self.criterion = torch.nn.MSELoss(reduction='mean')
         
@@ -165,13 +165,15 @@ class Pipeline:
 
         # i=0
 
+        best_loss = float('inf')
+
         for epoch in range(10):
 
             self.model.train()
             for tj_id, (_x_traj, _y_traj) in enumerate(data_train):
                 self.optimizer.zero_grad()
-                x_traj = _x_traj.permute(1, 2, 0)
-                y_traj = _y_traj.permute(1, 2, 0)
+                x_traj = _x_traj.permute(1, 2, 0).to(self.model.device)
+                y_traj = _y_traj.permute(1, 2, 0).to(self.model.device)
 
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
@@ -180,44 +182,6 @@ class Pipeline:
 
                 loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
 
-                
-                # loss = torch.tensor(0.0)
-                # loss_c = torch.tensor(0.0)
-                # self.model.reset_state(init_state)
-                # out_p = torch.zeros_like(init_state).squeeze(2)
-                # out_p2 = torch.zeros_like(init_state).squeeze(2)
-
-                # x_p = torch.zeros_like(init_state).squeeze(2)
-                # x_p2 = torch.zeros_like(init_state).squeeze(2)
-                # for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
-                #     # print("i =",i)
-                #     # print("x = ",x)
-                #     out = self.model(x).squeeze(2)
-
-                #     y = y.permute(1,0)
-                #     x = x.permute(1,0)
-
-                #     """
-                #     Loss 1.0
-                #     """
-
-                             
-                    
-                #     loss_c += loss_with_acc(x[:,0:7],x_p, x_p2, y)
-                    
-                #     """
-                #     Loss with min acc
-                #     """
-                #     loss += loss_with_acc(out,out_p, out_p2, y)
-                    
-                #     out_p2 = out_p
-                #     out_p = out
-
-                #     x_p2 = x_p
-                #     x_p = x[:,0:7]
-                    
-                    
-
 
                 loss.backward(retain_graph=True)
                 self.optimizer.step()
@@ -225,7 +189,7 @@ class Pipeline:
                 # Print statistics
                 # if (epoch+1) % 10 == 0:
                 writer.add_scalar('Loss/train', loss, epoch * len(data_train) + tj_id)
-                print(f'Epoch {epoch+1}, Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}')
+                print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}')
 
             self.model.eval()
             with torch.no_grad():
@@ -233,8 +197,8 @@ class Pipeline:
                 val_loss_c = 0.0
                 for tj_id, (_x_traj, _y_traj) in enumerate(data_valid):
                     self.optimizer.zero_grad()
-                    x_traj = _x_traj.permute(1, 2, 0)
-                    y_traj = _y_traj.permute(1, 2, 0)
+                    x_traj = _x_traj.permute(1, 2, 0).to(self.model.device)
+                    y_traj = _y_traj.permute(1, 2, 0).to(self.model.device)
 
 
                     init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
@@ -246,6 +210,12 @@ class Pipeline:
                     val_loss_c += loss_c
                 val_loss /= len(data_valid)
                 writer.add_scalar('Loss/valid', val_loss, epoch * len(data_valid) + tj_id)
+
+            if val_loss < best_loss:
+                best_loss = val_loss
+                best_model_wts = copy.deepcopy(self.model.state_dict())
+                # 保存模型
+                torch.save(self.model.state_dict(), 'best_model.pth')
 
                 
 
@@ -312,17 +282,17 @@ def mainKFNet():
 
     ini_state = torch.tensor([
         0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0
-    ]).unsqueeze(0).unsqueeze(2).repeat(args.n_batch,1,1)
+    ]).unsqueeze(0).unsqueeze(2).repeat(args.n_batch,1,1).to(task_model.device)
     ini_covariance = torch.eye(
         6).unsqueeze(0).repeat(args.n_batch,1,1)
     
-    T_fitler = torch.tensor(0.01)
+    T_fitler = torch.tensor(0.01).to(task_model.device)
 
     KF_model = KalmanNet(system_model= task_model,
                           initial_state=ini_state,
                           initial_covariance=ini_covariance,
                           args=args,
-                          dt=T_fitler)
+                          dt=T_fitler).cuda()
 
     instance.setNNModel(KF_model)
 

@@ -22,8 +22,8 @@ class ESKF_Torch(torch.nn.Module):
         Q = self.init_Q
 
         self.error_state_prior = F @ self.error_state + B @ control_vector    #self._propagate_state(F, gyro_measurement)
-        self.predict_state = self.system_model._state_injection(self._dt,self.state, self.error_state_prior)
-        self.covariance = self.system_model._propagate_covariance(F, Q, self.covariance)
+        self.predict_state = self.system_model._state_injection(self._dt,self.state, self.error_state_prior).to(self.device)
+        self.covariance = self.system_model._propagate_covariance(F, Q, self.covariance).to(self.device)
 
     def update(self, measurement):
         Hx = self.system_model.Hx_fun()
@@ -112,18 +112,23 @@ class KalmanNet(ESKF_Torch):
                  dt):
         super().__init__(system_model, initial_state, initial_covariance)
 
+        if args.use_cuda:
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
+
 
         
         diag_matrix_P = torch.diag(torch.tensor([0.001]*3+
-                            [0.002]*3, requires_grad=True))
+                            [0.002]*3, requires_grad=True)).to(self.device)
         diag_matrix_R = torch.diag(torch.tensor(
             [0.0001]*3+
-                        [0.01,0.01,0.01,0.01], requires_grad=True))
+                        [0.01,0.01,0.01,0.01], requires_grad=True)).to(self.device)
         
 
 
         self.covariance = torch.diag(torch.tensor([0.001]*3+
-                            [0.002]*3, requires_grad=True))
+                            [0.002]*3, requires_grad=True)).to(self.device)
 
         self.NNBuild(diag_matrix_P,
                      diag_matrix_R,
@@ -411,19 +416,19 @@ class KalmanNet(ESKF_Torch):
         weight = next(self.parameters()).data
         hidden = weight.new(self.seq_len_input, self.batch_size, self.d_hidden_S).zero_()
         self.h_S = hidden.data
-        self.h_S = self.init_S.reshape(1,1, -1).repeat(self.seq_len_input,self.batch_size, 1) # batch size expansion
+        self.h_S = self.init_S.reshape(1,1, -1).repeat(self.seq_len_input,self.batch_size, 1).to(self.device) # batch size expansion
         hidden = weight.new(self.seq_len_input, self.batch_size, self.d_hidden_Sigma).zero_()
         self.h_Sigma = hidden.data
-        self.h_Sigma = self.prior_Sigma.reshape(1,1, -1).repeat(self.seq_len_input,self.batch_size, 1) # batch size expansion
+        self.h_Sigma = self.prior_Sigma.reshape(1,1, -1).repeat(self.seq_len_input,self.batch_size, 1).to(self.device) # batch size expansion
         hidden = weight.new(self.seq_len_input, self.batch_size, self.d_hidden_Q).zero_()
         self.h_Q = hidden.data
-        self.h_Q = self.init_Q.reshape(1,1, -1).repeat(self.seq_len_input,self.batch_size, 1) # batch size expansion
+        self.h_Q = self.init_Q.reshape(1,1, -1).repeat(self.seq_len_input,self.batch_size, 1).to(self.device) # batch size expansion
 
 
     def reset_state(self, init_state):
         self.state = init_state
         self.covariance = torch.diag(torch.tensor([0.001]*3+
-                            [0.002]*3, requires_grad=True))
+                            [0.002]*3, requires_grad=True)).to(self.device)
         self.init_hidden_KNet()
 
 
