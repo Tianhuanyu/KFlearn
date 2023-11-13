@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 
 from torch.utils.tensorboard import SummaryWriter
+import copy
 
 
 class Pipeline:
@@ -105,11 +106,11 @@ class Pipeline:
         loss = torch.tensor(0.0).to(self.model.device)
         loss_c = torch.tensor(0.0).to(self.model.device)
         self.model.reset_state(init_state)
-        out_p = torch.zeros_like(init_state).squeeze(2)
-        out_p2 = torch.zeros_like(init_state).squeeze(2)
+        out_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        out_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
 
-        x_p = torch.zeros_like(init_state).squeeze(2)
-        x_p2 = torch.zeros_like(init_state).squeeze(2)
+        x_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        x_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
         for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
             # print("i =",i)
             # print("x = ",x)
@@ -134,6 +135,7 @@ class Pipeline:
 
             x_p2 = x_p
             x_p = x[:,0:7]
+            print("RUn to here ptid = ",ptid)
 
         return loss, loss_c
 
