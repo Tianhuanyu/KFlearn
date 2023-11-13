@@ -30,6 +30,7 @@ class TimeSeriesDataset(Dataset):
         self.data_input = data_input
         self.data_output = data_output
         self.window_size = window_size
+        self.is_test = is_test
         if(not is_test):
             self._index = [len(traj)-self.window_size+1 for traj in self.data_input]
         else:
@@ -59,10 +60,14 @@ class TimeSeriesDataset(Dataset):
                 break
             else:
                 temp_id = temp_id-ref
+        if(not self.is_test):
+            lt = self.window_size
+        else:
+            lt = len(self.data_input[k])-1
         
-
-        x = self.data_input[k][temp_id:temp_id+self.window_size]
-        y = self.data_output[k][temp_id:temp_id+self.window_size]
+        
+        x = self.data_input[k][temp_id:temp_id+lt]
+        y = self.data_output[k][temp_id:temp_id+lt]
         return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
     
 class RegistrationData:

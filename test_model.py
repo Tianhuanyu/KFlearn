@@ -15,6 +15,8 @@ from pipeline import Pipeline
 
 def main():
     args = general_settings()
+
+    args.n_batch = 1
     instance = Pipeline(args=args)
 
 

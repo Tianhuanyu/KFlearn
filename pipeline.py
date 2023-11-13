@@ -50,6 +50,7 @@ class Pipeline:
     def buildSetup(self, sysModel, args):
         self.setssModel(sysModel)
         self.setargs(args)
+        self.criterion = torch.nn.MSELoss(reduction='mean')
         
 
     def trainFilter(self):
@@ -162,7 +163,6 @@ class Pipeline:
         
         print("Number of trainable parameters for KNet pass 1:",sum(p.numel() for p in self.model.parameters() if p.requires_grad))
 
-        self.criterion = torch.nn.MSELoss(reduction='mean')
         
         writer = SummaryWriter('runs/experiment_1')
 
@@ -226,33 +226,30 @@ class Pipeline:
 
 
     def testModelwithpth(self, pth):
-        self.model.load_state_dict(torch.load('model.pth'))
+        self.model.load_state_dict(torch.load(pth))
         self.model.eval()
 
-        data_test = DataLoader(self.data_loader_test
+        data_test = DataLoader(self.data_loader_test,
                 batch_size=1, 
                 shuffle=True, 
                 num_workers=self.args.num_workers)
 
-        
+        print(" len(data_test) = ",len(data_test))
         with torch.no_grad():
             val_loss = 0.0
             val_loss_c = 0.0
-            for tj_id, (_x_traj, _y_traj) in enumerate(data_valid):
-                self.optimizer.zero_grad()
+            for tj_id, (_x_traj, _y_traj) in enumerate(data_test):
                 x_traj = _x_traj.permute(1, 2, 0).to(self.model.device)
                 y_traj = _y_traj.permute(1, 2, 0).to(self.model.device)
 
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
-                if(init_state.size()[0] != self.args.n_batch):
-                    break
 
                 loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
                 val_loss += loss
                 val_loss_c += loss_c
-                print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}')
-            val_loss /= len(data_valid)
+                print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}  x_traj {x_traj.shape}')
+            val_loss /= len(data_test)
 
             
 
