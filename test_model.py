@@ -43,7 +43,9 @@ def main():
 
     instance.setNNModel(KF_model)
 
-    instance.testModelwithpth('best_model.pth')
+    xs_list, ys_list, os_list = instance.testModelwithpth('best_model.pth')
+    RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0])
+    RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0], os_list[0])
 
 if  __name__ == "__main__":
     main()

@@ -199,7 +199,7 @@ class Pipeline:
                 # if (epoch+1) % 10 == 0:
                 writer.add_scalar('Loss/train', loss, epoch * len(data_train) + tj_id)
                 # if(tj_id % 50):
-                print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}')
+                print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}', flush=True)
 
             self.model.eval()
             with torch.no_grad():
@@ -218,6 +218,7 @@ class Pipeline:
                     loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
                     val_loss += loss
                     val_loss_c += loss_c
+                    print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}', flush=True)
                 val_loss /= len(data_valid)
                 writer.add_scalar('Loss/valid', val_loss, epoch * len(data_valid) + tj_id)
 
@@ -241,6 +242,9 @@ class Pipeline:
         with torch.no_grad():
             val_loss = 0.0
             val_loss_c = 0.0
+            xs_list = []
+            ys_list = []
+            os_list = []
             for tj_id, (_x_traj, _y_traj) in enumerate(data_test):
                 x_traj = _x_traj.permute(1, 2, 0).to(self.model.device)
                 y_traj = _y_traj.permute(1, 2, 0).to(self.model.device)
@@ -248,11 +252,65 @@ class Pipeline:
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
 
-                loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
+                loss, loss_c,xs, ys, os = self.outputinTraj(init_state, x_traj, y_traj)
                 val_loss += loss
                 val_loss_c += loss_c
+                xs_list.append(xs)
+                ys_list.append(ys)
+                os_list.append(os)
+
                 print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}  x_traj {x_traj.shape}')
             val_loss /= len(data_test)
+
+
+        print(os_list)
+        print("len = ", len(os_list[0]))
+
+        return xs_list, ys_list, os_list
+
+    def outputinTraj(self, init_state, x_traj, y_traj):
+        loss = torch.tensor(0.0).to(self.model.device)
+        loss_c = torch.tensor(0.0).to(self.model.device)
+        self.model.reset_state(init_state)
+        out_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        out_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+
+        x_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        x_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        output_record_x = []
+        output_record_y = []
+        output_record_o = []
+        for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
+            # print("i =",i)
+            # print("x = ",x)
+            out = self.model(x).squeeze(2)
+
+            y = y.permute(1,0)
+            x = x.permute(1,0)
+
+            """
+            Loss 1.0
+            """
+
+            loss_c += self.loss_with_acc(x[:,0:7],x_p, x_p2, y,x)
+            
+            """
+            Loss with min acc
+            """
+            loss += self.loss_with_acc(out,out_p, out_p2, y,x)
+            
+            out_p2 = out_p
+            out_p = out
+
+            x_p2 = x_p
+            x_p = x[:,0:7]
+
+            output_record_x.append(x[:,0:3].squeeze().cpu().detach().numpy().tolist())
+            output_record_y.append(y[:,0:3].squeeze().cpu().detach().numpy().tolist())
+            output_record_o.append(out[:,0:3].squeeze().cpu().detach().numpy().tolist())
+            # print("RUn to here ptid = ",ptid)
+
+        return loss, loss_c, output_record_x, output_record_y, output_record_o
 
             
 
