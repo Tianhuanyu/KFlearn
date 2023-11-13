@@ -199,6 +199,7 @@ class KalmanNet(ESKF_Torch):
         self.d_output_FC1 = self.n ** 2
         self.FC1 = nn.Sequential(
                 nn.Linear(self.d_input_FC1, self.d_output_FC1),
+                nn.Dropout(p=0.5),
                 nn.ReLU()).to(self.device)
 
         # Fully connected 2
@@ -208,7 +209,8 @@ class KalmanNet(ESKF_Torch):
         self.FC2 = nn.Sequential(
                 nn.Linear(self.d_input_FC2, self.d_hidden_FC2),
                 nn.ReLU(),
-                nn.Linear(self.d_hidden_FC2, self.d_output_FC2)
+                nn.Linear(self.d_hidden_FC2, self.d_output_FC2),
+                nn.Dropout(p=0.5)
                 ).to(self.device)
 
         # Fully connected 3
@@ -216,6 +218,7 @@ class KalmanNet(ESKF_Torch):
         self.d_output_FC3 = self.m ** 2
         self.FC3 = nn.Sequential(
                 nn.Linear(self.d_input_FC3, self.d_output_FC3),
+                nn.Dropout(p=0.5),
                 nn.ReLU()).to(self.device)
 
         # Fully connected 4
@@ -231,6 +234,7 @@ class KalmanNet(ESKF_Torch):
         self.d_output_FC5 = self.m * self.Output_dim_of_fnn
         self.FC5 = nn.Sequential(
                 nn.Linear(self.d_input_FC5, self.d_output_FC5),
+                nn.Dropout(p=0.5),
                 nn.ReLU()).to(self.device)
 
         # Fully connected 6
@@ -238,6 +242,7 @@ class KalmanNet(ESKF_Torch):
         self.d_output_FC6 = self.m * self.Output_dim_of_fnn
         self.FC6 = nn.Sequential(
                 nn.Linear(self.d_input_FC6, self.d_output_FC6),
+                nn.Dropout(p=0.5),
                 nn.ReLU()).to(self.device)
         
         # Fully connected 7
@@ -245,6 +250,7 @@ class KalmanNet(ESKF_Torch):
         self.d_output_FC7 = 2 * self.n * self.Output_dim_of_fnn
         self.FC7 = nn.Sequential(
                 nn.Linear(self.d_input_FC7, self.d_output_FC7),
+                nn.Dropout(p=0.5),
                 nn.ReLU()).to(self.device)
         
     def KGain_step(self, obs_diff, obs_innov_diff, fw_evol_diff, fw_update_diff):

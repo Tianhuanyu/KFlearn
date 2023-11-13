@@ -140,7 +140,10 @@ class Pipeline:
 
         return loss, loss_c
 
-    def trainNetwork(self):
+    def trainNetwork(self, pth=None):
+        if pth:
+            self.model.load_state_dict(torch.load(pth))
+
         self.learningRate = self.args.lr
         self.weightDecay = self.args.wd
         # self.optimizer = optim.Adam(self.model.parameters(), lr=self.learningRate, weight_decay=self.weightDecay)
