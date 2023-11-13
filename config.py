@@ -41,7 +41,7 @@ def general_settings():
                         help='if True, use CUDA')
     parser.add_argument('--n_steps', type=int, default=1000, metavar='N_steps',
                         help='number of training steps (default: 1000)')
-    parser.add_argument('--n_batch', type=int, default=80, metavar='N_B',
+    parser.add_argument('--n_batch', type=int, default=800, metavar='N_B',
                         help='input batch size for training (default: 80)')
     parser.add_argument('--n_seq', type=int, default=80, metavar='N_Se',
                         help='input batch size for training (default: 20)')
@@ -53,6 +53,9 @@ def general_settings():
                         help='if True, use composition loss')
     parser.add_argument('--alpha', type=float, default=0.3, metavar='alpha',
                         help='input alpha [0,1] for the composition loss')
+    
+    parser.add_argument('--num_workers', type=int, default=16, metavar='Num_workers',
+                        help='workers for data loading')
 
     
     ### KalmanNet settings

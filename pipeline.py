@@ -148,13 +148,15 @@ class Pipeline:
         data_train = DataLoader(self.data_loader_train,
                         batch_size=self.args.n_batch, 
                         shuffle=True, 
-                        num_workers=4)
+                        num_workers=self.arg.num_workers,
+                        pin_memory=True)
         
 
         data_valid = DataLoader(self.data_loader_valid,
                         batch_size=self.args.n_batch, 
                         shuffle=True, 
-                        num_workers=4)
+                        num_workers=self.arg.num_workers,
+                        pin_memory=True)
         
         print("Number of trainable parameters for KNet pass 1:",sum(p.numel() for p in self.model.parameters() if p.requires_grad))
 
