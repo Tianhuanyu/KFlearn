@@ -25,18 +25,21 @@ SAMPLE_STEP = 30
 
 
 class TimeSeriesDataset(Dataset):
-    def __init__(self, data_input, data_output, window_size):
+    def __init__(self, data_input, data_output, window_size, is_test=False):
+
         self.data_input = data_input
         self.data_output = data_output
-
         self.window_size = window_size
-        self._index = [len(traj)-self.window_size+1 for traj in self.data_input]
+        if(not is_test):
+            self._index = [len(traj)-self.window_size+1 for traj in self.data_input]
+        else:
+            self._index = [1 for traj in self.data_input]
+
         self._traj_num = len(self.data_input)
+        self.len = sum(self._index)
+
 
         print(self._index)
-
-        self.len = sum(self._index)-1
-
         print(self.len)
 
     def __len__(self):
@@ -47,7 +50,7 @@ class TimeSeriesDataset(Dataset):
         temp_id = index
         # raise ValueError("data Exceed {0} vs {1}".format(temp_id, self.len))
         # raise ValueError("data Exceed")
-        if(temp_id > self.len):
+        if(temp_id >= self.len):
             raise ValueError("data Exceed {0} vs {1}".format(temp_id, self.len))
 
         for i, ref in enumerate(self._index):
@@ -139,10 +142,10 @@ class RegistrationData:
             _output.append(_output_traj)
         return _input, _output
     
-    def generateDataLoader(self, window_size:int = 20)-> TimeSeriesDataset:
+    def generateDataLoader(self, window_size:int = 20, is_test:bool = False)-> TimeSeriesDataset:
         _input, _output = self.generateIOput()
 
-        return TimeSeriesDataset(_input, _output, window_size=window_size)
+        return TimeSeriesDataset(_input, _output, window_size=window_size, is_test = is_test)
 
 
     @ staticmethod

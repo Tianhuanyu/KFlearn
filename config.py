@@ -56,6 +56,8 @@ def general_settings():
     
     parser.add_argument('--num_workers', type=int, default=16, metavar='Num_workers',
                         help='workers for data loading')
+    parser.add_argument('--prefetch_factor', type=int, default=16, metavar='Prefetch_factor',
+                        help='prefetch_factor')
 
     
     ### KalmanNet settings

@@ -35,7 +35,7 @@ class Pipeline:
         instance_test = RegistrationData(
             number_list=number_list_test,
             names=[modelName])
-        self.data_loader_test = instance_test.generateDataLoader(window_size= args.n_seq)
+        self.data_loader_test = instance_test.generateDataLoader(window_size= args.n_seq, is_test=True)
 
     # TODO
     def setssModel(self, sysModel):
@@ -135,7 +135,7 @@ class Pipeline:
 
             x_p2 = x_p
             x_p = x[:,0:7]
-            print("RUn to here ptid = ",ptid)
+            # print("RUn to here ptid = ",ptid)
 
         return loss, loss_c
 
@@ -148,15 +148,17 @@ class Pipeline:
         data_train = DataLoader(self.data_loader_train,
                         batch_size=self.args.n_batch, 
                         shuffle=True, 
-                        num_workers=self.arg.num_workers,
-                        pin_memory=True)
+                        num_workers=self.args.num_workers,
+                        pin_memory=True,
+                        prefetch_factor=self.args.prefetch_factor)
         
 
         data_valid = DataLoader(self.data_loader_valid,
                         batch_size=self.args.n_batch, 
                         shuffle=True, 
-                        num_workers=self.arg.num_workers,
-                        pin_memory=True)
+                        num_workers=self.args.num_workers,
+                        pin_memory=True,
+                        prefetch_factor=self.args.prefetch_factor)
         
         print("Number of trainable parameters for KNet pass 1:",sum(p.numel() for p in self.model.parameters() if p.requires_grad))
 
@@ -193,6 +195,7 @@ class Pipeline:
                 # Print statistics
                 # if (epoch+1) % 10 == 0:
                 writer.add_scalar('Loss/train', loss, epoch * len(data_train) + tj_id)
+                # if(tj_id % 50):
                 print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}')
 
             self.model.eval()
@@ -219,7 +222,39 @@ class Pipeline:
                 best_loss = val_loss
                 best_model_wts = copy.deepcopy(self.model.state_dict())
                 # 保存模型
-                torch.save(self.model.state_dict(), 'best_model.pth')
+                torch.save(self.model.state_dict(), 'best_model_{0}_{1}_{2}_epoch{3}.pth'.format(self.args.lr, self.args.n_batch, self.args.wd, epoch))
+
+
+    def testModelwithpth(self, pth):
+        self.model.load_state_dict(torch.load('model.pth'))
+        self.model.eval()
+
+        data_test = DataLoader(self.data_loader_test
+                batch_size=1, 
+                shuffle=True, 
+                num_workers=self.args.num_workers)
+
+        
+        with torch.no_grad():
+            val_loss = 0.0
+            val_loss_c = 0.0
+            for tj_id, (_x_traj, _y_traj) in enumerate(data_valid):
+                self.optimizer.zero_grad()
+                x_traj = _x_traj.permute(1, 2, 0).to(self.model.device)
+                y_traj = _y_traj.permute(1, 2, 0).to(self.model.device)
+
+
+                init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                if(init_state.size()[0] != self.args.n_batch):
+                    break
+
+                loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
+                val_loss += loss
+                val_loss_c += loss_c
+                print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}')
+            val_loss /= len(data_valid)
+
+            
 
                 
 
