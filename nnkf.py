@@ -9,10 +9,17 @@ class ESKF_Torch(torch.nn.Module):
     def __init__(self, 
                  system_model:SystemModel,
                  initial_state:torch.tensor,
-                 initial_covariance: torch.tensor):
+                 initial_covariance: torch.tensor,
+                 args):
         self.system_model = system_model
         self.state, self.error_state, self.covariance = self.system_model.initsetup(initial_state, initial_covariance)
         super().__init__()
+        if args.use_cuda:
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
+
+        self.args = args
 
     
     def predict(self,control_vector):
@@ -45,7 +52,7 @@ class ESKF_Torch(torch.nn.Module):
         # print("self.error_state",self.error_state.size())
         self.error_state = K@ (measurement-self.predict_state)   # This is defination of obs_diff
         # print("self.error_state",self.error_state.size())
-        eYe = torch.eye(self.error_state.shape[1]).unsqueeze(0).repeat(self.system_model.n_batch,1,1)
+        eYe = torch.eye(self.error_state.shape[1]).unsqueeze(0).repeat(self.system_model.n_batch,1,1).to(self.device)
 
         # print("eYe",eYe.size())
         # print("H",H.size())
@@ -61,6 +68,24 @@ class ESKF_Torch(torch.nn.Module):
 
     def get_state(self):
         return self.state
+    
+    def reset_state(self, init_state):
+        # self.state = init_state
+        self.covariance = torch.diag(torch.tensor([0.001]*3+
+                            [0.002]*3, requires_grad=True)).to(self.device)
+        
+        diag_matrix_P = torch.diag(torch.tensor([0.001]*3+
+                            [0.002]*3, requires_grad=True)).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
+        diag_matrix_R = torch.diag(torch.tensor(
+                [0.0005]*3+
+                            [0.01,0.01,0.01,0.01], requires_grad=True)
+            ).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
+        T_fitler = torch.tensor(0.01)
+        self.reset_init_state(init_state, 
+                                diag_matrix_P, 
+                                diag_matrix_R, 
+                                T_fitler,
+                                self.args)
 
     def reset_init_state(self, state, system_noise_covariance, measurement_noise_covariance,dt,args):
         self.state = state
@@ -110,12 +135,7 @@ class KalmanNet(ESKF_Torch):
                  initial_covariance: torch.tensor,
                  args,
                  dt):
-        super().__init__(system_model, initial_state, initial_covariance)
-
-        if args.use_cuda:
-            self.device = torch.device('cuda')
-        else:
-            self.device = torch.device('cpu')
+        super().__init__(system_model, initial_state, initial_covariance,args)
 
 
         

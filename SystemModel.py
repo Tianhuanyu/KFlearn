@@ -175,8 +175,8 @@ class RobotSensorFusion(SystemModel):
         Xdx = torch.zeros(self.n_batch, 7, 6)
         for i in range(self.n_batch):
             Xdx_1 = torch.cat([torch.eye(3), 
-                            torch.zeros((4,3))], dim=0)
-            Xdx_2 = torch.cat([torch.zeros((3,3)), 
+                            torch.zeros((4,3))], dim=0).to(self.device)
+            Xdx_2 = torch.cat([torch.zeros((3,3)).to(self.device), 
                             Q_th_rt[i,:,:]], dim=0)
             Xdx[i,:,:]= torch.cat([Xdx_1, Xdx_2], dim=1)
 

@@ -41,11 +41,17 @@ def main():
                           args=args,
                           dt=T_fitler).cuda()
 
+    # KF_model = ESKF_Torch(system_model= task_model,
+    #                 initial_state=ini_state,
+    #                 initial_covariance=ini_covariance,
+    #                 args=args)
+
     instance.setNNModel(KF_model)
 
-    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_200_0.0001_epoch1.pth')
-    RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0])
-    RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0], os_list[0])
+    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_500_0.0001_seq100_KFNET.pth')
+    # xs_list, ys_list, os_list = instance.testModelwithpth(None)
+    RegistrationData.view_channels(xs_list[0], ys_list[0])
+    RegistrationData.view_channels(xs_list[0], ys_list[0], os_list[0])
 
 
     for name, param in KF_model.named_parameters():

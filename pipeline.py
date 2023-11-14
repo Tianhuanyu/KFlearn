@@ -229,9 +229,10 @@ class Pipeline:
                 torch.save(self.model.state_dict(), 'best_model_{0}_{1}_{2}_seq{3}_KFNET.pth'.format(self.args.lr, self.args.n_batch, self.args.wd, self.args.n_seq))
 
 
-    def testModelwithpth(self, pth):
-        self.model.load_state_dict(torch.load(pth))
-        self.model.eval()
+    def testModelwithpth(self, pth, update_period=None):
+        if(pth):
+            self.model.load_state_dict(torch.load(pth))
+            self.model.eval()
 
         data_test = DataLoader(self.data_loader_test,
                 batch_size=1, 
@@ -252,7 +253,7 @@ class Pipeline:
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
 
-                loss, loss_c,xs, ys, os = self.outputinTraj(init_state, x_traj, y_traj)
+                loss, loss_c,xs, ys, os = self.outputinTraj(init_state, x_traj, y_traj,update_period)
                 val_loss += loss
                 val_loss_c += loss_c
                 xs_list.append(xs)
@@ -268,7 +269,7 @@ class Pipeline:
 
         return xs_list, ys_list, os_list
 
-    def outputinTraj(self, init_state, x_traj, y_traj):
+    def outputinTraj(self, init_state, x_traj, y_traj,update_period):
         loss = torch.tensor(0.0).to(self.model.device)
         loss_c = torch.tensor(0.0).to(self.model.device)
         self.model.reset_state(init_state)
@@ -283,6 +284,11 @@ class Pipeline:
         for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
             # print("i =",i)
             # print("x = ",x)
+            if(update_period and ptid % int(update_period)== 0):
+                init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                self.model.reset_state(init_state)
+
+
             out = self.model(x).squeeze(2)
 
             y = y.permute(1,0)
@@ -358,7 +364,8 @@ def main():
 
     KF_model = ESKF_Torch(system_model= task_model,
                           initial_state=ini_state,
-                          initial_covariance=ini_covariance)
+                          initial_covariance=ini_covariance,
+                          args=args)
 
     instance.setNNModel(KF_model)
 
