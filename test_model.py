@@ -47,5 +47,9 @@ def main():
     RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0])
     RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0], os_list[0])
 
+
+    for name, param in KF_model.named_parameters():
+        print(name, param.requires_grad)
+
 if  __name__ == "__main__":
     main()
