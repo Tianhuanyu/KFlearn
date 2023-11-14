@@ -5,6 +5,7 @@ import numpy as np
 from typing import Tuple
 import matplotlib.pyplot as plt
 # import open3d as o3d
+from sklearn.cluster import DBSCAN
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -95,13 +96,15 @@ class RegistrationData:
         self.reproj_error = self.reproj_error[target_file_name]
         self._twist = self._twist[target_file_name]
         # print("self._pq_src = ",self._pq_src[0])
+
+        self._pq_src = self.outlier_remove(self._pq_src)
         
         self.hdeye_cali_results = self._registration(self.data_aug_dst[target_file_name],self.data_aug_src[target_file_name])
         self.ground_truth = self._get_ground_truth()
 
-        print("len(self._pq_dst) = ",len(self._pq_dst))
-        print("len(self.reproj_error) = ",len(self.reproj_error))
-        print("len(self.ground_truth) = ",len(self.ground_truth))
+        # print("len(self._pq_dst) = ",len(self._pq_dst))
+        # print("len(self.reproj_error) = ",len(self.reproj_error))
+        # print("len(self.ground_truth) = ",len(self.ground_truth))
 
 
         """
@@ -408,6 +411,42 @@ class RegistrationData:
         pose[:3] = p
         pose[3:] = q/np.linalg.norm(q)
         return pose
+
+
+    def outlier_remove(self, data):
+        # 将数据转换为 NumPy 数组以便使用 DBSCAN
+        X = np.array(data)
+
+        # 使用 DBSCAN 进行离群点检测
+        dbscan = DBSCAN(eps=1.0, min_samples=5)  # eps 和 min_samples 参数需要根据你的数据进行调整
+        clusters = dbscan.fit_predict(X)
+
+        # 找到离群点的索引
+        outlier_indices = np.where(clusters == -1)[0]
+
+        # 处理离群点
+        for index in outlier_indices:
+            # 找到上一个和下一个非离群点的索引
+            prev_index = next((i for i in range(index - 1, -1, -1) if clusters[i] != -1), None)
+            next_index = next((i for i in range(index + 1, len(data)) if clusters[i] != -1), None)
+            
+            # 如果找到了相邻的非离群点
+            if prev_index is not None and next_index is not None:
+                # 计算平均值
+                new_value = np.mean([X[prev_index], X[next_index]], axis=0)
+                # 替换离群点的值
+                X[index] = new_value
+            elif prev_index is not None:
+                # 如果只找到上一个非离群点
+                X[index] = X[prev_index]
+            elif next_index is not None:
+                # 如果只找到下一个非离群点
+                X[index] = X[next_index]
+
+        # 将处理后的 NumPy 数组转回二维列表
+        processed_data = X.tolist()
+        return processed_data
+
     
 
     @staticmethod
