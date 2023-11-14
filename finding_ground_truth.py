@@ -97,7 +97,7 @@ class RegistrationData:
         self._twist = self._twist[target_file_name]
         # print("self._pq_src = ",self._pq_src[0])
 
-        self._pq_src = self.outlier_remove(self._pq_src)
+        self._pq_dst = self.outlier_remove(self._pq_dst)
         
         self.hdeye_cali_results = self._registration(self.data_aug_dst[target_file_name],self.data_aug_src[target_file_name])
         self.ground_truth = self._get_ground_truth()
@@ -113,8 +113,8 @@ class RegistrationData:
         # RegistrationData.view_Cartesian_pose(self._pq_dst[0], self.ground_truth[0])
         # RegistrationData.view_channels(self._pq_dst[0], self.ground_truth[0])
 
-        print("Point 1 {0}".format(self._pq_dst[0][0]))
-        print("Point 1_gt {0}".format(self.ground_truth[0][0]))
+        # print("Point 1 {0}".format(self._pq_dst[0][0]))
+        # print("Point 1_gt {0}".format(self.ground_truth[0][0]))
 
         e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[0], self.ground_truth[0],self.reproj_error[0])
         print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
@@ -413,39 +413,45 @@ class RegistrationData:
         return pose
 
 
-    def outlier_remove(self, data):
+    def outlier_remove(self, _src):
         # 将数据转换为 NumPy 数组以便使用 DBSCAN
-        X = np.array(data)
+        # print("data",data)
+        # print("data",len(data))
+        output = []
+        for id,data in enumerate(_src):
+            X = np.array(data)
 
-        # 使用 DBSCAN 进行离群点检测
-        dbscan = DBSCAN(eps=1.0, min_samples=5)  # eps 和 min_samples 参数需要根据你的数据进行调整
-        clusters = dbscan.fit_predict(X)
+            # 使用 DBSCAN 进行离群点检测
+            dbscan = DBSCAN(eps=0.5, min_samples=20)  # eps 和 min_samples 参数需要根据你的数据进行调整
+            clusters = dbscan.fit_predict(X)
 
-        # 找到离群点的索引
-        outlier_indices = np.where(clusters == -1)[0]
+            # 找到离群点的索引
+            outlier_indices = np.where(clusters == -1)[0]
 
-        # 处理离群点
-        for index in outlier_indices:
-            # 找到上一个和下一个非离群点的索引
-            prev_index = next((i for i in range(index - 1, -1, -1) if clusters[i] != -1), None)
-            next_index = next((i for i in range(index + 1, len(data)) if clusters[i] != -1), None)
+            # 处理离群点
+            for index in outlier_indices:
+                # 找到上一个和下一个非离群点的索引
+                prev_index = next((i for i in range(index - 1, -1, -1) if clusters[i] != -1), None)
+                next_index = next((i for i in range(index + 1, len(data)) if clusters[i] != -1), None)
+                
+                # 如果找到了相邻的非离群点
+                if prev_index is not None and next_index is not None:
+                    # 计算平均值
+                    new_value = np.mean([X[prev_index], X[next_index]], axis=0)
+                    # 替换离群点的值
+                    # print("X[index]  = {0}  to {1}".format(X[index], new_value))
+                    X[index] = new_value
+                elif prev_index is not None:
+                    # 如果只找到上一个非离群点
+                    X[index] = X[prev_index]
+                elif next_index is not None:
+                    # 如果只找到下一个非离群点
+                    X[index] = X[next_index]
+
+            # 将处理后的 NumPy 数组转回二维列表
             
-            # 如果找到了相邻的非离群点
-            if prev_index is not None and next_index is not None:
-                # 计算平均值
-                new_value = np.mean([X[prev_index], X[next_index]], axis=0)
-                # 替换离群点的值
-                X[index] = new_value
-            elif prev_index is not None:
-                # 如果只找到上一个非离群点
-                X[index] = X[prev_index]
-            elif next_index is not None:
-                # 如果只找到下一个非离群点
-                X[index] = X[next_index]
-
-        # 将处理后的 NumPy 数组转回二维列表
-        processed_data = X.tolist()
-        return processed_data
+            output.append(X.tolist())
+        return output
 
     
 

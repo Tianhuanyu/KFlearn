@@ -238,7 +238,7 @@ class Pipeline:
                 shuffle=True, 
                 num_workers=self.args.num_workers)
 
-        print(" len(data_test) = ",len(data_test))
+        # print(" len(data_test) = ",len(data_test))
         with torch.no_grad():
             val_loss = 0.0
             val_loss_c = 0.0
@@ -263,8 +263,8 @@ class Pipeline:
             val_loss /= len(data_test)
 
 
-        print(os_list)
-        print("len = ", len(os_list[0]))
+        # print(os_list)
+        # print("len = ", len(os_list[0]))
 
         return xs_list, ys_list, os_list
 
