@@ -226,7 +226,7 @@ class Pipeline:
                 best_loss = val_loss
                 best_model_wts = copy.deepcopy(self.model.state_dict())
                 # 保存模型
-                torch.save(self.model.state_dict(), 'best_model_{0}_{1}_{2}_epoch{3}.pth'.format(self.args.lr, self.args.n_batch, self.args.wd, epoch))
+                torch.save(self.model.state_dict(), 'best_model_{0}_{1}_{2}_seq{3}_KFNET.pth'.format(self.args.lr, self.args.n_batch, self.args.wd, self.args.n_seq))
 
 
     def testModelwithpth(self, pth):
