@@ -19,7 +19,7 @@ def general_settings():
         # Random length
     parser.add_argument('--randomLength', type=bool, default=False, metavar='rl',
                     help='if True, random sequence length')
-    parser.add_argument('--T_max', type=int, default=1000, metavar='maximum-length',
+    parser.add_argument('--T_max', type=int, default=10000, metavar='maximum-length',
                     help='if random sequence length, input max sequence length')
     parser.add_argument('--T_min', type=int, default=100, metavar='minimum-length',
                 help='if random sequence length, input min sequence length')
@@ -41,7 +41,7 @@ def general_settings():
                         help='if True, use CUDA')
     parser.add_argument('--n_steps', type=int, default=1000, metavar='N_steps',
                         help='number of training steps (default: 1000)')
-    parser.add_argument('--n_batch', type=int, default=200, metavar='N_B',
+    parser.add_argument('--n_batch', type=int, default=500, metavar='N_B',
                         help='input batch size for training (default: 80)')
     parser.add_argument('--n_seq', type=int, default=100, metavar='N_Se',
                         help='input batch size for training (default: 20)')

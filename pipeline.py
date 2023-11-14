@@ -151,7 +151,7 @@ class Pipeline:
 
         data_train = DataLoader(self.data_loader_train,
                         batch_size=self.args.n_batch, 
-                        shuffle=True, 
+                        shuffle=False, 
                         num_workers=self.args.num_workers,
                         pin_memory=True,
                         prefetch_factor=self.args.prefetch_factor)

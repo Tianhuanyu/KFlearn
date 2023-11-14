@@ -43,7 +43,7 @@ def main():
 
     instance.setNNModel(KF_model)
 
-    xs_list, ys_list, os_list = instance.testModelwithpth('best_model.pth')
+    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_200_0.0001_epoch1.pth')
     RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0])
     RegistrationData.view_Cartesian_pose(xs_list[0], ys_list[0], os_list[0])
 
