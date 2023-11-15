@@ -156,7 +156,7 @@ class RobotSensorFusion(SystemModel):
 
         S = S.unsqueeze(0)
         S = S.repeat(self.n_batch, 1,1)
-        return S.to(self.device)
+        return -S.to(self.device)
     
     def Hx_fun(self):
         Hx = torch.eye(
