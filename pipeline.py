@@ -93,7 +93,7 @@ class Pipeline:
 
                 gt = y[0:7].unsqueeze(0)
                 gt = gt.permute(2,1,0)
-                print("error = {0}".format(torch.norm(gt[:,0:3,:]-state[:,0:3,:])))
+                # print("error = {0}".format(torch.norm(gt[:,0:3,:]-state[:,0:3,:])))
 
     def loss_with_acc(self,out,out_p,out_p2, y,x):
         return 100.0*(self.criterion(out[:,0:3], y[:,0:3]) + 

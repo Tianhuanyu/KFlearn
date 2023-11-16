@@ -79,7 +79,7 @@ class RobotSensorFusion(SystemModel):
 
     def quaternion_normalize(self,qs):
         o = torch.zeros_like(qs)
-        print("qs = ",qs.size())
+        # print("qs = ",qs.size())
         for i,q in enumerate(qs):
             w = q[0][0]
             x = q[1][0]
@@ -259,7 +259,7 @@ class RobotSensorFusion(SystemModel):
         dy = 0.5 * error_state[:, 4, :].unsqueeze(1)
         dz = 0.5 * error_state[:, 5, :].unsqueeze(1)
         dq = torch.cat([torch.zeros(self.n_batch, 1, 1, device=self.device), dx, dy, dz], dim=1)
-        dq.requires_grad = True
+        # dq.requires_grad = True
         q1 = self.quaternion_multiply(dq,state[:, 3:7, :])*dt + state[:, 3:7, :]
 
         true_state[:, 3:7, :] = q1

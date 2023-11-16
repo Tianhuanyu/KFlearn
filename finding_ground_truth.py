@@ -105,7 +105,7 @@ class RegistrationData:
         # print("self._twist = ",len(self._twist))
         # RegistrationData.view_channels(self._twist_fromsensor[0], self._twist[0])
         # print("self._twist_fromsensor = ",self._twist_fromsensor[0][3])
-        print("self._twist_fromsensor = ",self._twist_fromsensor[0])
+        # print("self._twist_fromsensor = ",self._twist_fromsensor[0])
         # raise ValueError("RUN TO HERE")
 
         
