@@ -96,11 +96,11 @@ class Pipeline:
                 # print("error = {0}".format(torch.norm(gt[:,0:3,:]-state[:,0:3,:])))
 
     def loss_with_acc(self,out,out_p,out_p2, y,x):
-        return 100.0*(self.criterion(out[:,0:3], y[:,0:3]) + 
-                            0.2* self.criterion(out[:,3:7], y[:,3:7])) + 1.0*(
+        return 0.5*(self.criterion(out[:,0:3], y[:,0:3]) + 
+                             self.criterion(out[:,3:7], y[:,3:7])) + 0.1*(
                                 self.criterion(out[:,0:3]+out_p2[:,0:3], 2.0*out_p[:,0:3]) + 
-                            0.2* self.criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 1.0*(
-                                self.criterion(x[:,0:3], out[:,0:3]) + 0.2* self.criterion(x[:,3:7], out[:,3:7])
+                             self.criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 0.4*(
+                                self.criterion(x[:,0:3], out[:,0:3]) +  self.criterion(x[:,3:7], out[:,3:7])
                             )
 
     def lossinTraj(self, init_state, x_traj, y_traj):
