@@ -28,6 +28,10 @@ class ESKF_Torch(torch.nn.Module):
 
         Q = self.init_Q
 
+        # print("control_vector = ",control_vector)
+        # raise ValueError("123")
+        # self.error_state = self.system_model.reset_error_state(self.state, self._dt,control_vector)
+
         self.error_state_prior = F @ self.error_state + B @ control_vector    #self._propagate_state(F, gyro_measurement)
         self.predict_state = self.system_model._state_injection(self._dt,self.state, self.error_state_prior).to(self.device)
         self.covariance = self.system_model._propagate_covariance(F, Q, self.covariance).to(self.device)
@@ -74,11 +78,11 @@ class ESKF_Torch(torch.nn.Module):
         self.covariance = torch.diag(torch.tensor([0.001]*3+
                             [0.002]*3, requires_grad=True)).to(self.device)
         
-        diag_matrix_P = torch.diag(torch.tensor([0.001]*3+
+        diag_matrix_P = torch.diag(torch.tensor([0.01]*3+
                             [0.002]*3, requires_grad=True)).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
         diag_matrix_R = torch.diag(torch.tensor(
-                [0.0005]*3+
-                            [0.01,0.01,0.01,0.01], requires_grad=True)
+                [1000.0]*3+
+                            [1000.0]*4, requires_grad=True)
             ).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
         T_fitler = torch.tensor(0.01)
         self.reset_init_state(init_state, 
@@ -401,7 +405,7 @@ class KalmanNet(ESKF_Torch):
         # print("INOV = ",INOV)
         # raise ValueError("Run to here")
 
-        self.state = self.system_model._state_injection(self._dt,self.predict_state, INOV)
+        self.state = self.system_model._state_injection(self._dt,self.state, INOV)
         
 
         # print("INOV = ",INOV)
@@ -759,7 +763,7 @@ class ESKNet(KalmanNet):
         # print("INOV = ",INOV)
         # raise ValueError("Run to here")
 
-        self.state = self.system_model._state_injection(self._dt,self.predict_state, INOV)
+        self.state = self.system_model._state_injection(self._dt,self.state, INOV)
         
 
         # print("INOV = ",INOV)

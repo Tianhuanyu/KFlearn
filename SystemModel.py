@@ -182,28 +182,52 @@ class RobotSensorFusion(SystemModel):
 
         return Xdx.to(self.device)
     
-    def quaternion_multiply(self,q1, q2):
-        w1 = q1[0]
-        x1 = q1[1]
-        y1 = q1[2]
-        z1 = q1[3]
+    def quaternion_multiply(self, q1, q2):
+        # 假设 q1 和 q2 的形状为 [n_batch, 4, 1]
+        # 其中四元数以 [w, x, y, z] 的形式存储
 
-        # print("w1", w1.size())
+        # 分别获取 w, x, y, z
+        w1, x1, y1, z1 = q1[:, 0, :], q1[:, 1, :], q1[:, 2, :], q1[:, 3, :]
+        w2, x2, y2, z2 = q2[:, 0, :], q2[:, 1, :], q2[:, 2, :], q2[:, 3, :]
 
-        w2 = q2[0]
-        x2 = q2[1]
-        y2 = q2[2]
-        z2 = q2[3]
+        # 执行四元数乘法
+        # w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+        # x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+        # y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
+        # z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
 
         w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
         x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
         y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
         z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
 
-        # print("torch.tensor([w, x, y, z])", torch.tensor([w, x, y, z]).size())
+        # 将结果组合回四元数的形式
+        q = torch.cat([w, x, y, z], dim=1).unsqueeze(2)
+
+        return q.to(self.device)
+    
+    # def quaternion_multiply(self,q1, q2):
+    #     w1 = q1[0]
+    #     x1 = q1[1]
+    #     y1 = q1[2]
+    #     z1 = q1[3]
+
+    #     # print("w1", w1.size())
+
+    #     w2 = q2[0]
+    #     x2 = q2[1]
+    #     y2 = q2[2]
+    #     z2 = q2[3]
+
+    #     w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+    #     x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+    #     y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
+    #     z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
+
+    #     # print("torch.tensor([w, x, y, z])", torch.tensor([w, x, y, z]).size())
 
 
-        return torch.tensor([w, x, y, z], requires_grad=True).unsqueeze(1).to(self.device)
+    #     return torch.tensor([w, x, y, z], requires_grad=True).unsqueeze(1).to(self.device)
     
     def _state_injection(self, dt, state, error_state):
         dt = dt.to(self.device)
@@ -220,14 +244,85 @@ class RobotSensorFusion(SystemModel):
             print("error_state =",error_state.size())
 
         # output is not a quaterion vector
-        for i in range(self.n_batch):
-            dx1,dy1,dz1 = 0.5 * error_state[i,3:6,:]
-            dq1 = torch.tensor([0.0, dx1, dy1, dz1], requires_grad=True).unsqueeze(1).to(self.device)
-            # print("dq1 = ",dq1.size())
-            q1 = self.quaternion_multiply(state[i,3:7,:], dq1)*dt + state[i,3:7,:]
-            # print("state[i,3:7,:] = ",state[i,3:7,:].size())
-            # print("q1 = ",q1.size())
+        # for i in range(self.n_batch):
+        #     dx1,dy1,dz1 = 0.5 * error_state[i,3:6,:]
+        #     dq1 = torch.tensor([0.0, dx1, dy1, dz1], requires_grad=True).unsqueeze(1).to(self.device)
+        #     # print("dq1 = ",dq1.size())
+        #     q1 = self.quaternion_multiply(state[i,3:7,:], dq1)*dt + state[i,3:7,:]
+        #     # print("state[i,3:7,:] = ",state[i,3:7,:].size())
+        #     # print("q1 = ",q1.size())
 
-            true_state[i,3:7,:] = q1
+        #     true_state[i,3:7,:] = q1
+        # print("error_state[:, 3, :] = ",error_state)
+        # raise ValueError("123")
+        dx = 0.5 * error_state[:, 3, :].unsqueeze(1)
+        dy = 0.5 * error_state[:, 4, :].unsqueeze(1)
+        dz = 0.5 * error_state[:, 5, :].unsqueeze(1)
+        dq = torch.cat([torch.zeros(self.n_batch, 1, 1, device=self.device), dx, dy, dz], dim=1)
+        dq.requires_grad = True
+        q1 = self.quaternion_multiply(dq,state[:, 3:7, :])*dt + state[:, 3:7, :]
+
+        true_state[:, 3:7, :] = q1
 
         return true_state.to(self.device)
+    
+    def quaternion_to_rotation_matrix(self, q):
+        """
+        将四元数转换为旋转矩阵
+
+        参数：
+        q: 四元数，表示为 [w, x, y, z]
+
+        返回：
+        R: 旋转矩阵,3x3的NumPy数组
+        """
+        w, x, y, z = q[:,0,:],q[:,1,:],q[:,2,:],q[:,3,:]
+
+        R_1 = torch.cat([1 - 2*y*y - 2*z*z, 2*x*y - 2*z*w, 2*x*z + 2*y*w], dim=1)
+        R_2 = torch.cat([2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z, 2*y*z - 2*x*w], dim=1)
+        R_3 = torch.cat([2*x*z - 2*y*w, 2*y*z + 2*x*w, 1 - 2*x*x - 2*y*y], dim=1)
+
+        R = torch.cat([R_1, R_2, R_3], dim=0).unsqueeze(0)
+
+        R = R.repeat(self.n_batch,1,1)
+
+        return R.to(self.device)
+    
+
+      
+    def _skew_symmetric_matrix(self, v):
+
+        sk1 = torch.cat([torch.zeros_like(v[:,2,:]), -v[:,2,:], v[:,1,:]], dim=1)
+        sk2 = torch.cat([v[:,2,:], torch.zeros_like(v[:,2,:]), -v[:,0,:]], dim=1)
+        sk3 = torch.cat([-v[:,1,:], v[:,0,:], torch.zeros_like(v[:,2,:])], dim=1)
+
+        sk = torch.cat([sk1, sk2, sk3], dim=0).unsqueeze(0)
+
+        sk = sk.repeat(self.n_batch,1,1)
+        # skew symmetric matrix for Forward kinematics
+        return sk.to(self.device)
+    
+    def reset_error_state(self, state, dt,contro_vector):
+        t_t = state[:,0:3,:]
+        q_t = state[:,3:7,:]
+        
+        R_t = self.quaternion_to_rotation_matrix(q_t)
+        W33 = self._skew_symmetric_matrix(contro_vector[:,3:6,:])*dt
+
+        # print("W33 = ",W33)
+
+        I33 = torch.eye(3).repeat(self.n_batch,1,1).to(self.device)
+        Rt1 = (I33 + W33)@R_t
+
+        # print("Rt1 = ",Rt1.shape)
+
+        sp =  Rt1.transpose(1,2) @ t_t -t_t
+        agp = torch.cat([sp, torch.zeros_like(t_t).to(self.device)], dim=1)
+
+        # print("agp = ", agp)
+
+        agp = agp.repeat(self.n_batch,1,1)
+
+        return agp.to(self.device)
+
+

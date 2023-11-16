@@ -311,9 +311,9 @@ class Pipeline:
             x_p2 = x_p
             x_p = x[:,0:7]
 
-            output_record_x.append(x[:,0:3].squeeze().cpu().detach().numpy().tolist())
-            output_record_y.append(y[:,0:3].squeeze().cpu().detach().numpy().tolist())
-            output_record_o.append(out[:,0:3].squeeze().cpu().detach().numpy().tolist())
+            output_record_x.append(x[:,0:7].squeeze().cpu().detach().numpy().tolist())
+            output_record_y.append(y[:,0:7].squeeze().cpu().detach().numpy().tolist())
+            output_record_o.append(out[:,0:7].squeeze().cpu().detach().numpy().tolist())
             # print("RUn to here ptid = ",ptid)
 
         return loss, loss_c, output_record_x, output_record_y, output_record_o

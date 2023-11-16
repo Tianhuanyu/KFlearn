@@ -22,6 +22,8 @@ INDEX_FOR_REPROJ = 13
 INDEX_FOR_REPROJ2 = 14
 accept_rate = 0.5
 SAMPLE_STEP = 30
+T_step = 0.01
+DISPLAY = [1,4,5]
 
 
 
@@ -98,6 +100,14 @@ class RegistrationData:
         # print("self._pq_src = ",self._pq_src[0])
 
         self._pq_dst = self.outlier_remove(self._pq_dst)
+
+        self._twist_fromsensor = self.getposediff(self._pq_src)
+        # print("self._twist = ",len(self._twist))
+        # RegistrationData.view_channels(self._twist_fromsensor[0], self._twist[0])
+        # print("self._twist_fromsensor = ",self._twist_fromsensor[0][3])
+        print("self._twist_fromsensor = ",self._twist_fromsensor[0])
+        # raise ValueError("RUN TO HERE")
+
         
         self.hdeye_cali_results = self._registration(self.data_aug_dst[target_file_name],self.data_aug_src[target_file_name])
         self.ground_truth = self._get_ground_truth()
@@ -140,7 +150,7 @@ class RegistrationData:
         """
         _input = []
         _output = []
-        for traj_dst, traj_err, traj_tst, traj_src in zip(self._pq_dst, self.reproj_error, self._twist,self.ground_truth):
+        for traj_dst, traj_err, traj_tst, traj_src in zip(self._pq_dst, self.reproj_error, self._twist_fromsensor,self.ground_truth):
             _input_traj = []
             _output_traj = []
             for _dst, _err, _tst, _src in zip(traj_dst, traj_err, traj_tst, traj_src):
@@ -154,6 +164,57 @@ class RegistrationData:
         _input, _output = self.generateIOput()
 
         return TimeSeriesDataset(_input, _output, window_size=window_size, is_test = is_test)
+    
+    def getposediff(self, pose_list):
+        _list = []
+        for traj in pose_list:
+            twist_list = [[0.0]*6]
+
+            for i in range(1,len(traj)):
+                _twist_v = (np.asarray(traj[i][0:3])- np.asarray(traj[i-1][0:3]))/T_step
+                _twist_av = RegistrationData.quaternion_to_anglevel(traj[i][3:7], traj[i-1][3:7])*100.0
+
+                twist_list.append(
+                    _twist_v.tolist() + _twist_av.tolist()
+                )
+            _list.append(twist_list)
+        return _list
+            
+
+            
+
+
+
+
+    @staticmethod
+    def quaternion_to_anglevel(quaternion,quaternionlst):
+        _twist_temp =  np.asarray(quaternion)- np.asarray(quaternionlst)
+        _twist_temp =  2.0*_twist_temp/T_step
+        qt_star = RegistrationData.quaternion_conjugate(np.asarray(quaternionlst))
+        q = RegistrationData.quaternion_multiply(_twist_temp, qt_star)
+        wx, wy, wz = q[1], q[2], q[3]
+
+        return np.array([wx, wy, wz])
+
+
+    @staticmethod
+    def quaternion_conjugate(quaternion):
+        w, x, y, z = quaternion
+        return np.array([w, -x, -y, -z], dtype=np.float64)
+    
+
+    @staticmethod
+    def quaternion_multiply(quaternion0, quaternion1):
+        w1, x1, y1, z1 = quaternion0
+        w2, x2, y2, z2 = quaternion1
+
+        w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+        x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+        y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
+        z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
+
+        return np.array([w, x, y, z], dtype=np.float64)
+
 
 
     @ staticmethod
@@ -422,7 +483,7 @@ class RegistrationData:
             X = np.array(data)
 
             # 使用 DBSCAN 进行离群点检测
-            dbscan = DBSCAN(eps=0.5, min_samples=20)  # eps 和 min_samples 参数需要根据你的数据进行调整
+            dbscan = DBSCAN(eps=0.2, min_samples=20)  # eps 和 min_samples 参数需要根据你的数据进行调整
             clusters = dbscan.fit_predict(X)
 
             # 找到离群点的索引
@@ -573,9 +634,9 @@ class RegistrationData:
         for i, measurements in enumerate(measurements_list):
             pos = [[] for i in range(7)]
             for mes in measurements:
-                pos[0].append(mes[0])
-                pos[1].append(mes[1])
-                pos[2].append(mes[2])
+                pos[0].append(mes[DISPLAY[0]])
+                pos[1].append(mes[DISPLAY[1]])
+                pos[2].append(mes[DISPLAY[2]])
 
             plt.subplot(3, 1, 1)  # 三行一列，当前激活的是第一个图
             plt.plot(pos[0])  # '-r' 表示红色实线
