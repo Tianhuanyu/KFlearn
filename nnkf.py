@@ -198,6 +198,7 @@ class KalmanNet(ESKF_Torch):
         
         self.m = self.prior_Sigma.shape[1]
         self.n = measurement_noise_covariance.shape[0]
+        self.pos_n = 3
 
         self.Output_dim_of_fnn = args.in_mult_KNet
 
@@ -212,21 +213,21 @@ class KalmanNet(ESKF_Torch):
         # print("self.Output_dim_of_fnn = ",self.Output_dim_of_fnn)
         # GRU to track Q
         self.d_input_Q = self.m * self.Output_dim_of_fnn
-        self.d_hidden_Q = self.m ** 2
+        self.d_hidden_Q = self.m **2
         self.GRU_Q = nn.GRU(self.d_input_Q, 
                             self.d_hidden_Q
                             ).to(self.device)
 
         # GRU to track Sigma
         self.d_input_Sigma = self.d_hidden_Q + self.m * self.Output_dim_of_fnn
-        self.d_hidden_Sigma = self.m ** 2
+        self.d_hidden_Sigma = self.m **2
         self.GRU_Sigma = nn.GRU(self.d_input_Sigma, 
                                 self.d_hidden_Sigma
                                 ).to(self.device)
        
         # GRU to track S
         self.d_input_S = self.n ** 2 + 2 * self.n * self.Output_dim_of_fnn
-        self.d_hidden_S = self.n ** 2
+        self.d_hidden_S = self.n **2
         self.GRU_S = nn.GRU(self.d_input_S, 
                             self.d_hidden_S
                             ).to(self.device)
@@ -241,17 +242,25 @@ class KalmanNet(ESKF_Torch):
 
         # Fully connected 2
         self.d_input_FC2 = self.d_hidden_S + self.d_hidden_Sigma
-        self.d_output_FC2 = self.n * self.m
+        self.d_output_FC2 = self.pos_n * self.pos_n
         self.d_hidden_FC2 = self.d_input_FC2 * self.Output_dim_of_fnn
         self.FC2 = nn.Sequential(
                 nn.Linear(self.d_input_FC2, self.d_hidden_FC2),
                 nn.ReLU(),
-                nn.Linear(self.d_hidden_FC2, self.d_output_FC2),
-                nn.Dropout(p=0.5)
+                nn.Linear(self.d_hidden_FC2, self.d_output_FC2)
+                ).to(self.device)
+
+        self.d_input_FC21 = self.d_hidden_S + self.d_hidden_Sigma
+        self.d_output_FC21 = (self.n - self.pos_n) * (self.m- self.pos_n)
+        self.d_hidden_FC21 = self.d_input_FC2 * self.Output_dim_of_fnn
+        self.FC21 = nn.Sequential(
+                nn.Linear(self.d_input_FC21, self.d_hidden_FC21),
+                nn.ReLU(),
+                nn.Linear(self.d_hidden_FC21, self.d_output_FC21)
                 ).to(self.device)
 
         # Fully connected 3
-        self.d_input_FC3 = self.d_hidden_S + self.d_output_FC2
+        self.d_input_FC3 = self.d_hidden_S + self.d_output_FC2 + self.d_output_FC21
         self.d_output_FC3 = self.m ** 2
         self.FC3 = nn.Sequential(
                 nn.Linear(self.d_input_FC3, self.d_output_FC3),
@@ -329,6 +338,7 @@ class KalmanNet(ESKF_Torch):
         # print("in_Q = ",in_Q.size())
         # print("self.h_Q = ",self.h_Q.size())
         out_Q, self.h_Q = self.GRU_Q(in_Q, self.h_Q)
+        # out_Q = torch.diag_embed(out_Q.squeeze(-1))
 
 
         # FC 6
@@ -341,6 +351,7 @@ class KalmanNet(ESKF_Torch):
         # print("in_Sigma = ",in_Sigma.size())
         # print("self.h_Sigma = ",self.h_Sigma.size())
         out_Sigma, self.h_Sigma = self.GRU_Sigma(in_Sigma, self.h_Sigma)
+        # out_Sigma = torch.diag_embed(out_Sigma.squeeze(-1))
 
         # FC 1
         in_FC1 = out_Sigma
@@ -354,18 +365,27 @@ class KalmanNet(ESKF_Torch):
         # S-GRU
         in_S = torch.cat((out_FC1, out_FC7), 2)
         out_S, self.h_S = self.GRU_S(in_S, self.h_S)
+        # out_S = torch.diag_embed(out_Sigma.squeeze(-1))
 
 
         # FC 2
         in_FC2 = torch.cat((out_Sigma, out_S), 2)
         out_FC2 = self.FC2(in_FC2)
 
+        # in_FC2 = torch.cat((out_Sigma, out_S), 2)
+        out_FC21 = self.FC21(in_FC2)
+
+        # out_FC2 = torch.cat((_FC2, _FC21), dim = 2)
+        # out_FC21 = torch.cat((torch.zeros_like(_FC2).to(self.device),  _FC21), dim = 2)
+
+        # out_FC2 = torch.cat((out_FC2, out_FC21), dim = 1)
+
         #####################
         ### Backward Flow ###
         #####################
 
         # FC 3
-        in_FC3 = torch.cat((out_S, out_FC2), 2)
+        in_FC3 = torch.cat((out_S, out_FC2, out_FC21), 2)
         out_FC3 = self.FC3(in_FC3)
 
         # FC 4
@@ -376,7 +396,7 @@ class KalmanNet(ESKF_Torch):
         self.h_Sigma = out_FC4
         # raise ValueError("Run to  here")
 
-        return out_FC2
+        return out_FC2, out_FC21
     ###############
     ### Forward ###
     ###############
@@ -463,10 +483,18 @@ class KalmanNet(ESKF_Torch):
         # print("obs_diff size = ",obs_diff.shape)
 
         # Kalman Gain Network Step
-        KG = self.KGain_step(obs_diff, obs_innov_diff, fw_evol_diff, fw_update_diff)
+        KG1, KG2 = self.KGain_step(obs_diff, obs_innov_diff, fw_evol_diff, fw_update_diff)
 
         # Reshape Kalman Gain to a Matrix
-        self.KGain = torch.reshape(KG, (self.batch_size, self.m, self.n))
+        KG1 = torch.reshape(KG1, (self.batch_size, self.pos_n, self.pos_n))
+        KG2 = torch.reshape(KG2, (self.batch_size, self.m-self.pos_n, self.n - self.pos_n))
+
+        # print("KG1 size =", KG1.shape)
+        # print("KG2 size =", KG2.shape)
+
+        _KG1 = torch.cat([KG1,  torch.zeros_like(KG2).to(self.device)], dim=2)
+        _KG2 = torch.cat([torch.zeros_like(KG1).to(self.device), KG2], dim=2)
+        self.KGain = torch.cat([_KG1, _KG1], dim=1) #torch.reshape(KG, (self.batch_size, self.m, self.n))
 
 
     def init_hidden_KNet(self):
@@ -512,19 +540,15 @@ class KalmanNet(ESKF_Torch):
 
 
 
-class ESKNet(KalmanNet):
+
+class KalmanNetOrigin(ESKF_Torch):
     def __init__(self, 
                  system_model:SystemModel,
                  initial_state:torch.tensor,
                  initial_covariance: torch.tensor,
                  args,
                  dt):
-        super().__init__(system_model, initial_state, initial_covariance)
-
-        if args.use_cuda:
-            self.device = torch.device('cuda')
-        else:
-            self.device = torch.device('cpu')
+        super().__init__(system_model, initial_state, initial_covariance,args)
 
 
         
@@ -782,11 +806,25 @@ class ESKNet(KalmanNet):
         
         self.step_KGain_est(measurement)
         # Innovation
-        dy = measurement - self.predict_state # [batch_size, n, 1]
+        # dy = measurement - self.predict_state # [batch_size, n, 1]
+
+        dy = measurement-self.predict_state
+
+
+           # This is defination of obs_diff
 
         # Compute the 1-st posterior moment
         INOV = torch.bmm(self.KGain, dy)
 
+        min_mag = torch.zeros_like(INOV).to(self.device)
+
+        max_mag = torch.tensor([
+                0.008, 0.008, 0.008, 0.06, 0.06, 0.06
+            ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
+
+        sign = INOV.sign()
+        INOV = INOV.abs_().clamp_(min_mag, max_mag)
+        INOV =INOV* sign
         # print("INOV = ",INOV)
         # raise ValueError("Run to here")
 

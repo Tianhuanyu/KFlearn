@@ -142,7 +142,7 @@ class Pipeline:
 
     def trainNetwork(self, pth=None):
         if pth:
-            self.model.load_state_dict(torch.load(pth))
+            self.model.load_state_dict(torch.load(pth), strict=False)
 
         self.learningRate = self.args.lr
         self.weightDecay = self.args.wd
