@@ -412,7 +412,13 @@ class KalmanNet(ESKF_Torch):
         # Innovation
         # dy = measurement - self.predict_state # [batch_size, n, 1]
 
-        t = measurement-self.predict_state
+        dy = measurement-self.predict_state
+
+
+           # This is defination of obs_diff
+
+        # Compute the 1-st posterior moment
+        INOV = torch.bmm(self.KGain, dy)
 
         min_mag = torch.zeros_like(measurement).to(self.device)
 
@@ -420,15 +426,9 @@ class KalmanNet(ESKF_Torch):
                 0.008, 0.008, 0.008, 0.06, 0.06, 0.06, 0.06
             ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)
 
-        sign = t.sign()
-        t = t.abs_().clamp_(min_mag, max_mag)
-        dy =t* sign
-
-           # This is defination of obs_diff
-
-        # Compute the 1-st posterior moment
-        INOV = torch.bmm(self.KGain, dy)
-
+        sign = INOV.sign()
+        INOV = INOV.abs_().clamp_(min_mag, max_mag)
+        dy =INOV* sign
         # print("INOV = ",INOV)
         # raise ValueError("Run to here")
 
