@@ -417,7 +417,7 @@ class KalmanNet(ESKF_Torch):
         min_mag = torch.zeros_like(measurement).to(self.device)
 
         max_mag = torch.tensor([
-                0.003, 0.003, 0.003, 0.1, 0.1, 0.1, 0.1
+                0.008, 0.008, 0.008, 0.06, 0.06, 0.06, 0.06
             ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)
 
         sign = t.sign()
