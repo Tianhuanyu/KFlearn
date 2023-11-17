@@ -54,7 +54,20 @@ class ESKF_Torch(torch.nn.Module):
         #     cov_inv[i,:,:] = torch.inverse(cov[i,:,:])
         K = self.covariance @ H.transpose(1,2) @ torch.inverse(cov)
         # print("self.error_state",self.error_state.size())
-        self.error_state = K@ (measurement-self.predict_state)   # This is defination of obs_diff
+
+        t = measurement-self.predict_state
+
+        min_mag = torch.zeros_like(min_mag).to(self.device)
+
+        max_mag = torch.tensor([
+                0.005, 0.005, 0.005, 0.1, 0.1, 0.1, 0.1
+            ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)
+
+        sign = t.sign()
+        t = t.abs_().clamp_(min_mag, max_mag)
+        t *= sign
+
+        self.error_state = K@ t   # This is defination of obs_diff
         # print("self.error_state",self.error_state.size())
         eYe = torch.eye(self.error_state.shape[1]).unsqueeze(0).repeat(self.system_model.n_batch,1,1).to(self.device)
 
