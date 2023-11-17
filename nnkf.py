@@ -410,7 +410,21 @@ class KalmanNet(ESKF_Torch):
         
         self.step_KGain_est(measurement)
         # Innovation
-        dy = measurement - self.predict_state # [batch_size, n, 1]
+        # dy = measurement - self.predict_state # [batch_size, n, 1]
+
+        t = measurement-self.predict_state
+
+        min_mag = torch.zeros_like(measurement).to(self.device)
+
+        max_mag = torch.tensor([
+                0.003, 0.003, 0.003, 0.1, 0.1, 0.1, 0.1
+            ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)
+
+        sign = t.sign()
+        t = t.abs_().clamp_(min_mag, max_mag)
+        dy =t* sign
+
+           # This is defination of obs_diff
 
         # Compute the 1-st posterior moment
         INOV = torch.bmm(self.KGain, dy)
