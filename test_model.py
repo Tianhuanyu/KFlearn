@@ -48,7 +48,7 @@ def main():
 
     instance.setNNModel(KF_model)
 
-    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_500_0.0001_seq100_KFNET.pth')
+    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_20_0.0001_seq100_KFNET.pth',50)
     # xs_list, ys_list, os_list = instance.testModelwithpth(None,500)
     RegistrationData.view_channels(xs_list[0], ys_list[0])
     RegistrationData.view_channels(xs_list[0], ys_list[0], os_list[0])

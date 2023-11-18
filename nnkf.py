@@ -496,7 +496,7 @@ class KalmanNet(ESKF_Torch):
 
         _KG1 = torch.cat([KG1,  torch.zeros_like(KG2).to(self.device)], dim=2)
         _KG2 = torch.cat([torch.zeros_like(KG1).to(self.device), KG2], dim=2)
-        self.KGain = torch.cat([_KG1, _KG1], dim=1) #torch.reshape(KG, (self.batch_size, self.m, self.n))
+        self.KGain = torch.cat([_KG1, _KG2], dim=1) #torch.reshape(KG, (self.batch_size, self.m, self.n))
 
 
     def init_hidden_KNet(self):

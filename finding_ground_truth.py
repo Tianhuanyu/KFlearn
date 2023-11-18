@@ -72,11 +72,15 @@ class TimeSeriesDataset(Dataset):
         x = self.data_input[k][temp_id:temp_id+lt]
         y = self.data_output[k][temp_id:temp_id+lt]
         return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
-    
+
+#is_outlier_removed True: remove outliers in this part; otherwise skip
+
+
 class RegistrationData:
     def __init__(self, 
                  number_list:list = list(range(1,6)), 
-                 names:list = "saved_state.csv") -> None:
+                 names:list = "saved_state.csv",
+                 is_outlier_removed:bool = False) -> None:
         self.data = {}
         for name in names:
             path_list = RegistrationData.read_paths_from_name(name, number_list)
@@ -99,7 +103,6 @@ class RegistrationData:
         self._twist = self._twist[target_file_name]
         # print("self._pq_src = ",self._pq_src[0])
 
-        self._pq_dst = self.outlier_remove(self._pq_dst)
 
         self._twist_fromsensor = self.getposediff(self._pq_src)
         # print("self._twist = ",len(self._twist))
@@ -128,7 +131,9 @@ class RegistrationData:
 
         e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[0], self.ground_truth[0],self.reproj_error[0])
         print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
-
+        if(is_outlier_removed):
+            # self._pq_dst = self.outlier_remove_DBSCAN(self._pq_dst)
+            self._pq_dst = self.outlier_with_reference(self._pq_dst, self.ground_truth)
 
         self._hy_cali = self._get_transformation()
 
@@ -473,8 +478,49 @@ class RegistrationData:
         pose[3:] = q/np.linalg.norm(q)
         return pose
 
+    def outlier_with_reference(self, _src, _ref):
+        output = []
+        for id,(sp, rp) in enumerate(zip(_src, _ref)):
+            X_src = np.asarray(sp)
+            X = X_src - np.asarray(rp)
 
-    def outlier_remove(self, _src):
+            # 使用 DBSCAN 进行离群点检测
+            dbscan = DBSCAN(eps=0.2, min_samples=20)  # eps 和 min_samples 参数需要根据你的数据进行调整
+            clusters = dbscan.fit_predict(X)
+
+            # 找到离群点的索引
+            outlier_indices = np.where(clusters == -1)[0]
+
+            # 处理离群点
+            for index in outlier_indices:
+                # 找到上一个和下一个非离群点的索引
+                prev_index = next((i for i in range(index - 1, -1, -1) if clusters[i] != -1), None)
+                next_index = next((i for i in range(index + 1, len(sp)) if clusters[i] != -1), None)
+                
+                # 如果找到了相邻的非离群点
+                if prev_index is not None and next_index is not None:
+                    # 计算平均值
+                    new_value = np.mean([X_src[prev_index], X_src[next_index]], axis=0)
+                    # 替换离群点的值
+                    # print("X[index]  = {0}  to {1}".format(X[index], new_value))
+                    X_src[index] = new_value
+                elif prev_index is not None:
+                    # 如果只找到上一个非离群点
+                    X_src[index] = X_src[prev_index]
+                elif next_index is not None:
+                    # 如果只找到下一个非离群点
+                    X_src[index] = X_src[next_index]
+
+            # 将处理后的 NumPy 数组转回二维列表
+            
+            output.append(X_src.tolist())
+        return output
+
+
+
+
+
+    def outlier_remove_DBSCAN(self, _src):
         # 将数据转换为 NumPy 数组以便使用 DBSCAN
         # print("data",data)
         # print("data",len(data))
