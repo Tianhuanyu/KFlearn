@@ -97,7 +97,7 @@ class Pipeline:
 
     def loss_with_acc(self,out,out_p,out_p2, y,x):
         return 1.0*(self.criterion(out[:,0:3], y[:,0:3]) + 
-                             self.criterion(out[:,3:7], y[:,3:7])) + 0.0*(
+                             10.0*self.criterion(out[:,3:7], y[:,3:7])) + 0.0*(
                                 self.criterion(out[:,0:3]+out_p2[:,0:3], 2.0*out_p[:,0:3]) + 
                              self.criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 0.0*(
                                 self.criterion(x[:,0:3], out[:,0:3]) +  self.criterion(x[:,3:7], out[:,3:7])

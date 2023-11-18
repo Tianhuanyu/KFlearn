@@ -440,15 +440,17 @@ class KalmanNet(ESKF_Torch):
         # Compute the 1-st posterior moment
         INOV = torch.bmm(self.KGain, dy)
 
-        min_mag = torch.zeros_like(INOV).to(self.device)
+        # min_mag = torch.zeros_like(INOV).to(self.device)
 
-        max_mag = torch.tensor([
-                0.008, 0.008, 0.008, 0.06, 0.06, 0.06
-            ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
+        # max_mag = torch.tensor([
+        #         0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+        #     ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
 
-        sign = INOV.sign()
-        INOV = INOV.abs_().clamp_(min_mag, max_mag)
-        INOV =INOV* sign
+        # sign = INOV.sign()
+        # INOV = INOV.abs_().clamp_(min_mag, max_mag)
+        # INOV =INOV* sign
+
+
         # print("INOV = ",INOV)
         # raise ValueError("Run to here")
 
@@ -819,7 +821,7 @@ class KalmanNetOrigin(ESKF_Torch):
         min_mag = torch.zeros_like(INOV).to(self.device)
 
         max_mag = torch.tensor([
-                0.008, 0.008, 0.008, 0.06, 0.06, 0.06
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1
             ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
 
         sign = INOV.sign()
