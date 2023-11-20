@@ -298,12 +298,12 @@ class Pipeline:
             Loss 1.0
             """
 
-            loss_c += self.loss_with_acc(x[:,0:7],x_p, x_p2, y,x)
+            loss_c = loss_c*0.95 + self.loss_with_acc(x[:,0:7],x_p, x_p2, y,x)
             
             """
             Loss with min acc
             """
-            loss += self.loss_with_acc(out,out_p, out_p2, y,x)
+            loss = loss*0.95 + self.loss_with_acc(out,out_p, out_p2, y,x)
             
             out_p2 = out_p
             out_p = out

@@ -41,7 +41,7 @@ def general_settings():
                         help='if True, use CUDA')
     parser.add_argument('--n_steps', type=int, default=1000, metavar='N_steps',
                         help='number of training steps (default: 1000)')
-    parser.add_argument('--n_batch', type=int, default=20, metavar='N_B',
+    parser.add_argument('--n_batch', type=int, default=150, metavar='N_B',
                         help='input batch size for training (default: 80)')
     parser.add_argument('--n_seq', type=int, default=100, metavar='N_Se',
                         help='input batch size for training (default: 20)')
