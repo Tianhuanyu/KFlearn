@@ -288,7 +288,9 @@ class Pipeline:
                 init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
                 self.model.reset_state(init_state)
 
-
+            # print("x = ",x)
+            # print("x = ", x.shape)
+            # raise ValueError("Run to here")
             out = self.model(x).squeeze(2)
 
             y = y.permute(1,0)

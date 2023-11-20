@@ -441,12 +441,12 @@ class KalmanNet(ESKF_Torch):
         INOV = torch.bmm(self.KGain, dy)
 
         if not self.training:
-            # min_mag = torch.zeros_like(INOV).to(self.device)
+            min_mag = torch.zeros_like(INOV).to(self.device)
 
             max_mag = torch.tensor([
-                    0.005, 0.005, 0.005, 0.1, 0.1, 0.1
+                    0.001, 0.001, 0.001, 0.2, 0.2, 0.2
                 ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
-            min_mag = -1.0*max_mag
+            # min_mag = -1.0*max_mag
 
             sign = INOV.sign()
             INOV = INOV.abs_().clamp_(min_mag, max_mag)
