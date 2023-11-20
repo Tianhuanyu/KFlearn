@@ -289,6 +289,8 @@ class RobotSensorFusion(SystemModel):
 
 
         R = torch.cat([R_1, R_2, R_3], dim=2)
+
+        R = R.transpose(0,2,1)
         # print("R_1", R_1.shape)
 
         # R = R.repeat(self.n_batch,1,1)
