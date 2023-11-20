@@ -155,7 +155,7 @@ class RobotSensorFusion(SystemModel):
 
         R = self.quaternion_to_rotation_matrix(state[:,3:,:]).to(self.device)
 
-        S = torch.eye(self.error_state_size).to(self.device)
+        S = torch.eye(6).to(self.device)
         S = S.repeat(self.n_batch, 1,1)
 
         S[:,:3,:3] = R
@@ -283,13 +283,15 @@ class RobotSensorFusion(SystemModel):
         """
         w, x, y, z = q[:,0,:],q[:,1,:],q[:,2,:],q[:,3,:]
 
-        R_1 = torch.cat([1 - 2*y*y - 2*z*z, 2*x*y - 2*z*w, 2*x*z + 2*y*w], dim=1)
-        R_2 = torch.cat([2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z, 2*y*z - 2*x*w], dim=1)
-        R_3 = torch.cat([2*x*z - 2*y*w, 2*y*z + 2*x*w, 1 - 2*x*x - 2*y*y], dim=1)
+        R_1 = torch.cat([1 - 2*y*y - 2*z*z, 2*x*y - 2*z*w, 2*x*z + 2*y*w], dim=1).unsqueeze(2)
+        R_2 = torch.cat([2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z, 2*y*z - 2*x*w], dim=1).unsqueeze(2)
+        R_3 = torch.cat([2*x*z - 2*y*w, 2*y*z + 2*x*w, 1 - 2*x*x - 2*y*y], dim=1).unsqueeze(2)
 
-        R = torch.cat([R_1, R_2, R_3], dim=0).unsqueeze(0)
 
-        R = R.repeat(self.n_batch,1,1)
+        R = torch.cat([R_1, R_2, R_3], dim=2)
+        # print("R_1", R_1.shape)
+
+        # R = R.repeat(self.n_batch,1,1)
 
         return R.to(self.device)
     

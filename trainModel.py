@@ -44,7 +44,7 @@ def mainKFNet():
 
     instance.setNNModel(KF_model)
 
-    instance.trainNetwork('best_model_0.001_500_0.0001_seq100_KFNET.pth')
+    instance.trainNetwork('best_model_0.001_150_0.0001_seq100_KFNET.pth')
 
 if  __name__ == "__main__":
     mainKFNet()
