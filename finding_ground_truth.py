@@ -23,7 +23,7 @@ INDEX_FOR_REPROJ2 = 14
 accept_rate = 0.5
 SAMPLE_STEP = 30
 T_step = 0.01
-DISPLAY = [1,3,4]
+DISPLAY = [0,1,2]
 
 
 
@@ -104,7 +104,6 @@ class RegistrationData:
         # print("self._pq_src = ",self._pq_src[0])
 
 
-        self._twist_fromsensor = self.getposediff(self._pq_src)
         # print("self._twist = ",len(self._twist))
         # RegistrationData.view_channels(self._twist_fromsensor[0], self._twist[0])
         # print("self._twist_fromsensor = ",self._twist_fromsensor[0][3])
@@ -114,6 +113,8 @@ class RegistrationData:
         
         self.hdeye_cali_results = self._registration(self.data_aug_dst[target_file_name],self.data_aug_src[target_file_name])
         self.ground_truth = self._get_ground_truth()
+
+        self._twist_fromsensor = self.getposediff_wrtEE(self._pq_src)
 
         # print("len(self._pq_dst) = ",len(self._pq_dst))
         # print("len(self.reproj_error) = ",len(self.reproj_error))
@@ -184,6 +185,30 @@ class RegistrationData:
                 )
             _list.append(twist_list)
         return _list
+    
+
+    def getposediff_wrtEE(self, pose_list):
+        _output = []
+        _twist_src = self.getposediff(pose_list)
+    
+        for _src_traj, _rob_traj in zip(_twist_src, pose_list):
+            poses = []
+            for _src_point, _rob_point in zip(_src_traj, _rob_traj):
+                p = _src_point[:3]
+                q = _src_point[3:7]
+                # T44 = RegistrationData.from_pq2T44(p,q)
+                T44 = RegistrationData.from_pq2T44(_rob_point[:3],_rob_point[3:7])
+
+
+
+                t = T44[:3,:3].T @ np.asarray(p)
+                # print("t = ",t)
+                pose = t.flatten().tolist() + q  #RegistrationData.from_T442pose(T_t_ee).flatten().tolist()
+                poses.append(pose)
+
+            _output.append(poses)
+
+        return _output
             
 
             

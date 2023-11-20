@@ -151,12 +151,17 @@ class RobotSensorFusion(SystemModel):
         #     ) + Q
         return covariance.to(self.device)
     
-    def _compute_control_matrix(self, dt):
-        S = torch.eye(self.error_state_size).to(self.device)*dt
+    def _compute_control_matrix(self, dt, state):
 
-        S = S.unsqueeze(0)
+        R = self.quaternion_to_rotation_matrix(state[:,3:,:]).to(self.device)
+
+        S = torch.eye(self.error_state_size).to(self.device)
         S = S.repeat(self.n_batch, 1,1)
-        return -S.to(self.device)
+
+        S[:,:3,:3] = R
+
+
+        return S.to(self.device)*dt
     
     def Hx_fun(self):
         Hx = torch.eye(

@@ -24,7 +24,9 @@ class ESKF_Torch(torch.nn.Module):
     
     def predict(self,control_vector):
         F = self.system_model._compute_state_transition_matrix(self._dt)
-        B = self.system_model._compute_control_matrix(self._dt)
+        # Bx = self.system_model.quaternion_to_rotation_matrix(self.state[:,3:,:])
+        # print(Bx)
+        B = self.system_model._compute_control_matrix(self._dt, self.state) 
 
         Q = self.init_Q
 
@@ -57,15 +59,15 @@ class ESKF_Torch(torch.nn.Module):
 
         t = measurement-self.predict_state
 
-        min_mag = torch.zeros_like(min_mag).to(self.device)
+        # min_mag = torch.zeros_like(min_mag).to(self.device)
 
-        max_mag = torch.tensor([
-                0.005, 0.005, 0.005, 0.1, 0.1, 0.1, 0.1
-            ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)
+        # max_mag = torch.tensor([
+        #         0.005, 0.005, 0.005, 0.1, 0.1, 0.1, 0.1
+        #     ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)
 
-        sign = t.sign()
-        t = t.abs_().clamp_(min_mag, max_mag)
-        t *= sign
+        # sign = t.sign()
+        # t = t.abs_().clamp_(min_mag, max_mag)
+        # t *= sign
 
         self.error_state = K@ t   # This is defination of obs_diff
         # print("self.error_state",self.error_state.size())
@@ -80,7 +82,7 @@ class ESKF_Torch(torch.nn.Module):
         #reset
         self.prvious_error_state = self.error_state
         self.error_state = torch.zeros_like(self.error_state)
-        return self.state
+        return self.predict_state
     
 
     def get_state(self):
@@ -415,7 +417,7 @@ class KalmanNet(ESKF_Torch):
 
 
         F = self.system_model._compute_state_transition_matrix(self._dt)
-        B = self.system_model._compute_control_matrix(self._dt)
+        B = self.system_model._compute_control_matrix(self._dt,self.state)
 
         # Q = self.init_Q
         # Compute Kalman Gain
@@ -795,7 +797,7 @@ class KalmanNetOrigin(ESKF_Torch):
 
 
         F = self.system_model._compute_state_transition_matrix(self._dt)
-        B = self.system_model._compute_control_matrix(self._dt)
+        B = self.system_model._compute_control_matrix(self._dt,self.state)
 
         # Q = self.init_Q
         # Compute Kalman Gain
