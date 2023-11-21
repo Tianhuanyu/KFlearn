@@ -186,7 +186,8 @@ class Pipeline:
 
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
-                re_error = x_traj[0,7,:].unsqueeze(0).permute(2, 1, 0)
+                # print("x_traj[0,0:7,:] = {0},  x_traj[0,7,:] = {1}".format(x_traj[0,0:7,:].shape, x_traj[0,7,:].unsqueeze(0).unsqueeze(0).shape))
+                re_error = x_traj[0,7,:].unsqueeze(0).unsqueeze(0).permute(2, 1, 0)
                 if(init_state.size()[0] != self.args.n_batch):
                     break
 
@@ -213,7 +214,7 @@ class Pipeline:
 
 
                     init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
-                    re_error = x_traj[0,7,:].unsqueeze(0).permute(2, 1, 0)
+                    re_error = x_traj[0,7,:].unsqueeze(0).unsqueeze(0).permute(2, 1, 0)
                     if(init_state.size()[0] != self.args.n_batch):
                         break
 
@@ -254,8 +255,9 @@ class Pipeline:
 
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                re_error = x_traj[0,7,:].unsqueeze(0).unsqueeze(0).permute(2, 1, 0)
 
-                loss, loss_c,xs, ys, os = self.outputinTraj(init_state, x_traj, y_traj,update_period)
+                loss, loss_c,xs, ys, os = self.outputinTraj(init_state, x_traj, y_traj,update_period,re_error)
                 val_loss += loss
                 val_loss_c += loss_c
                 xs_list.append(xs)
@@ -271,20 +273,18 @@ class Pipeline:
 
         return xs_list, ys_list, os_list
 
-    def outputinTraj(self, init_state, x_traj, y_traj,update_period):
+    def outputinTraj(self, init_state, x_traj, y_traj,update_period,repro_error):
         loss = torch.tensor(0.0).to(self.model.device)
         loss_c = torch.tensor(0.0).to(self.model.device)
         out_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
         out_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
-
         x_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
         x_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        self.model.reset_state(init_state,repro_error)
         output_record_x = []
         output_record_y = []
         output_record_o = []
         for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
-            # print("i =",i)
-            # print("x = ",x)
             if(update_period and ptid % int(update_period)== 0):
                 init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
                 repro_error = x_traj[ptid,7,:].unsqueeze(0).permute(2, 1, 0)
