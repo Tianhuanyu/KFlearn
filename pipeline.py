@@ -103,10 +103,10 @@ class Pipeline:
                                 self.criterion(x[:,0:3], out[:,0:3]) +  self.criterion(x[:,3:7], out[:,3:7])
                             )
 
-    def lossinTraj(self, init_state, x_traj, y_traj):
+    def lossinTraj(self, init_state, x_traj, y_traj,r_error):
         loss = torch.tensor(0.0).to(self.model.device)
         loss_c = torch.tensor(0.0).to(self.model.device)
-        self.model.reset_state(init_state)
+        self.model.reset_state(init_state,r_error)
         out_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
         out_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
 
@@ -176,7 +176,7 @@ class Pipeline:
 
         best_loss = float('inf')
 
-        for epoch in range(10):
+        for epoch in range(100):
 
             self.model.train()
             for tj_id, (_x_traj, _y_traj) in enumerate(data_train):
@@ -186,10 +186,11 @@ class Pipeline:
 
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                re_error = x_traj[0,7,:].unsqueeze(0).permute(2, 1, 0)
                 if(init_state.size()[0] != self.args.n_batch):
                     break
 
-                loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
+                loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj,re_error)
 
 
                 loss.backward(retain_graph=True)
@@ -212,10 +213,11 @@ class Pipeline:
 
 
                     init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                    re_error = x_traj[0,7,:].unsqueeze(0).permute(2, 1, 0)
                     if(init_state.size()[0] != self.args.n_batch):
                         break
 
-                    loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj)
+                    loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj,re_error)
                     val_loss += loss
                     val_loss_c += loss_c
                     print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}', flush=True)
@@ -272,7 +274,6 @@ class Pipeline:
     def outputinTraj(self, init_state, x_traj, y_traj,update_period):
         loss = torch.tensor(0.0).to(self.model.device)
         loss_c = torch.tensor(0.0).to(self.model.device)
-        self.model.reset_state(init_state)
         out_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
         out_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
 
@@ -286,7 +287,8 @@ class Pipeline:
             # print("x = ",x)
             if(update_period and ptid % int(update_period)== 0):
                 init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
-                self.model.reset_state(init_state)
+                repro_error = x_traj[ptid,7,:].unsqueeze(0).permute(2, 1, 0)
+                self.model.reset_state(init_state,repro_error)
 
             # print("x = ",x)
             # print("x = ", x.shape)
