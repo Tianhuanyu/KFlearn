@@ -174,7 +174,7 @@ class Pipeline:
 
         # i=0
 
-        best_loss = float('inf')
+        best_loss = 1.282
 
         for epoch in range(100):
 
