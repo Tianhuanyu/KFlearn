@@ -129,10 +129,18 @@ class RegistrationData:
 
         # print("Point 1 {0}".format(self._pq_dst[0][0]))
         # print("Point 1_gt {0}".format(self.ground_truth[0][0]))
-
+        e_avgs = []
+        e_maxs = []
         for i in range(len(self._pq_dst)):
             e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
             print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
+            e_avgs.append(e_avg)
+            e_maxs.append(e_max)
+        print("np.var(e_avgs) = ", np.var(e_avgs))
+        print("np.var(e_maxs) = ", np.var(e_maxs))
+        print("np.mean(e_avgs) = ", np.mean(e_avgs))
+        print("np.mean(e_maxs) = ", np.mean(e_maxs))
+
         # print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
         if(is_outlier_removed):
             # self._pq_dst = self.outlier_remove_DBSCAN(self._pq_dst)
@@ -274,6 +282,24 @@ class RegistrationData:
         # print("average es", len(traj1))
         # print("average es", e_sum)
         return e_sum/(w_sum), e_max
+
+    # @ staticmethod
+    # def find_mass_center_of_two_traj(traj1, traj2, ws=None):
+    #     e_max = 0.0
+    #     e_sum = 0.0
+    #     w_sum = 0.0
+    #     if ws == None:
+    #         ws = [1.0 for _ in traj1]
+    #     es = []
+    #     for p1, p2, w in zip(traj1, traj2, ws):
+    #         e = np.array(p1[:3])-np.array(p2[:3])
+
+    #         es.append(e)
+
+        
+
+
+    #     return 
     
     # def view_every_channel(*measurements_list):
     #     # ax = plt.figure().add_subplot()
