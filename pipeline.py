@@ -96,12 +96,9 @@ class Pipeline:
                 # print("error = {0}".format(torch.norm(gt[:,0:3,:]-state[:,0:3,:])))
 
     def loss_with_acc(self,out,out_p,out_p2, y,x):
-        return 1.0*(self.criterion(out[:,0:3], y[:,0:3]) + 
-                             10.0*self.criterion(out[:,3:7], y[:,3:7])) + 0.0*(
-                                self.criterion(out[:,0:3]+out_p2[:,0:3], 2.0*out_p[:,0:3]) + 
-                             self.criterion(out[:,3:7]+out_p2[:,3:7], 2.0*out_p[:,3:7]))+ 0.0*(
-                                self.criterion(x[:,0:3], out[:,0:3]) +  self.criterion(x[:,3:7], out[:,3:7])
-                            )
+        return (1.0 *self.criterion(out[:,0:3], y[:,0:3]) + 0.2*self.criterion(out[:,3:7], y[:,3:7]) 
+        + 0.03*self.criterion(2*out[:,0:3], out_p2[:,0:3]+out_p[:,0:3]) +
+         0.01*self.criterion(2*out[:,3:7], out_p2[:,3:7]+out_p[:,3:7]))
 
     def lossinTraj(self, init_state, x_traj, y_traj,r_error):
         loss = torch.tensor(0.0).to(self.model.device)
@@ -174,7 +171,8 @@ class Pipeline:
 
         # i=0
 
-        best_loss = 1.282
+        best_loss = 0.09986
+        max_norm =0.05
 
         for epoch in range(100):
 
@@ -195,11 +193,15 @@ class Pipeline:
 
 
                 loss.backward(retain_graph=True)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm)
                 self.optimizer.step()
 
                 # Print statistics
                 # if (epoch+1) % 10 == 0:
                 writer.add_scalar('Loss/train', loss, epoch * len(data_train) + tj_id)
+
+
+
                 # if(tj_id % 50):
                 print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {loss.item()}, LossC {loss_c.item()}', flush=True)
 

@@ -130,8 +130,10 @@ class RegistrationData:
         # print("Point 1 {0}".format(self._pq_dst[0][0]))
         # print("Point 1_gt {0}".format(self.ground_truth[0][0]))
 
-        e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[0], self.ground_truth[0],self.reproj_error[0])
-        print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
+        for i in range(len(self._pq_dst)):
+            e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
+            print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
+        # print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
         if(is_outlier_removed):
             # self._pq_dst = self.outlier_remove_DBSCAN(self._pq_dst)
             self._pq_dst = self.outlier_with_reference(self._pq_dst, self.ground_truth)
