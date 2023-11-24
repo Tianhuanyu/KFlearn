@@ -136,8 +136,8 @@ class RegistrationData:
             print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
             e_avgs.append(e_avg)
             e_maxs.append(e_max)
-        print("np.var(e_avgs) = ", np.var(e_avgs))
-        print("np.var(e_maxs) = ", np.var(e_maxs))
+        print("np.std(e_avgs) = ", np.std(e_avgs))
+        print("np.std(e_maxs) = ", np.std(e_maxs))
         print("np.mean(e_avgs) = ", np.mean(e_avgs))
         print("np.mean(e_maxs) = ", np.mean(e_maxs))
 
