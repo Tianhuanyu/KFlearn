@@ -10,7 +10,7 @@ from sklearn.cluster import DBSCAN
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from sklearn.cluster import KMeans
+from sklearn.cluster import MeanShift
 
 # conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 
@@ -307,17 +307,31 @@ class RegistrationData:
 
             es.append(e)
         es_points = np.array(es)
-        K = 2
-        kmeans = KMeans(n_clusters=K).fit(np.asarray(es))
-        labels = kmeans.labels_
+        bandwidth_value = 0.1
+        meanshift = MeanShift(bandwidth=bandwidth_value).fit(es_points)
+        cluster_centers = meanshift.cluster_centers_
 
-        densest_cluster = np.argmax(np.bincount(labels))
-        cluster_points = es_points[labels == densest_cluster]
-        centroid = kmeans.cluster_centers_[densest_cluster]
+        labels = meanshift.labels_
+        densities = [np.sum(labels == i) for i in range(len(cluster_centers))]
+        max_density_idx = np.argmax(densities)
+        max_density_point = cluster_centers[max_density_idx]
 
-        closest_point = cluster_points[np.argmin(np.linalg.norm(cluster_points - centroid, axis=1))]
+        # labels = kmeans.labels_
+        # centroids = kmeans.cluster_centers_
+        # density = [np.mean(np.linalg.norm(points[labels == i] - centroids[i], axis=1)) for i in range(K)]
 
-        return closest_point
+
+        # K = 2
+        # kmeans = KMeans(n_clusters=K).fit(np.asarray(es))
+        # labels = kmeans.labels_
+
+        # densest_cluster = np.argmax(np.bincount(labels))
+        # cluster_points = es_points[labels == densest_cluster]
+        # centroid = kmeans.cluster_centers_[densest_cluster]
+
+        # closest_point = cluster_points[np.argmin(np.linalg.norm(cluster_points - centroid, axis=1))]
+
+        return max_density_point
     
     # def view_every_channel(*measurements_list):
     #     # ax = plt.figure().add_subplot()
