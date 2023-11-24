@@ -10,6 +10,8 @@ from sklearn.cluster import DBSCAN
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+from sklearn.cluster import KMeans
+
 # conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 
 
@@ -131,15 +133,24 @@ class RegistrationData:
         # print("Point 1_gt {0}".format(self.ground_truth[0][0]))
         e_avgs = []
         e_maxs = []
+        e_dens = []
         for i in range(len(self._pq_dst)):
             e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
+
+            e_den = RegistrationData.find_mass_center_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
             print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
+            print(" e_dens = {0}  ".format(e_den))
             e_avgs.append(e_avg)
             e_maxs.append(e_max)
+            e_dens.append(e_den)
+
         print("np.std(e_avgs) = ", np.std(e_avgs))
         print("np.std(e_maxs) = ", np.std(e_maxs))
         print("np.mean(e_avgs) = ", np.mean(e_avgs))
         print("np.mean(e_maxs) = ", np.mean(e_maxs))
+
+        print("np.std(e_dens) = ", np.std(e_dens))
+        print("np.mean(e_dens) = ", np.mean(e_dens))
 
         # print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
         if(is_outlier_removed):
@@ -283,23 +294,29 @@ class RegistrationData:
         # print("average es", e_sum)
         return e_sum/(w_sum), e_max
 
-    # @ staticmethod
-    # def find_mass_center_of_two_traj(traj1, traj2, ws=None):
-    #     e_max = 0.0
-    #     e_sum = 0.0
-    #     w_sum = 0.0
-    #     if ws == None:
-    #         ws = [1.0 for _ in traj1]
-    #     es = []
-    #     for p1, p2, w in zip(traj1, traj2, ws):
-    #         e = np.array(p1[:3])-np.array(p2[:3])
+    @ staticmethod
+    def find_mass_center_of_two_traj(traj1, traj2, ws=None):
+        e_max = 0.0
+        e_sum = 0.0
+        w_sum = 0.0
+        if ws == None:
+            ws = [1.0 for _ in traj1]
+        es = []
+        for p1, p2, w in zip(traj1, traj2, ws):
+            e = np.array(p1[:3])-np.array(p2[:3])
 
-    #         es.append(e)
+            es.append(e)
+        K = 2
+        kmeans = KMeans(n_clusters=K).fit(np.asarray(es))
+        labels = kmeans.labels_
 
-        
+        densest_cluster = np.argmax(np.bincount(labels))
+        cluster_points = points[labels == densest_cluster]
+        centroid = kmeans.cluster_centers_[densest_cluster]
 
+        closest_point = cluster_points[np.argmin(np.linalg.norm(cluster_points - centroid, axis=1))]
 
-    #     return 
+        return closest_point
     
     # def view_every_channel(*measurements_list):
     #     # ax = plt.figure().add_subplot()
