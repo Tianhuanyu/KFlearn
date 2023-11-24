@@ -306,12 +306,13 @@ class RegistrationData:
             e = np.array(p1[:3])-np.array(p2[:3])
 
             es.append(e)
+        es_points = np.array(es)
         K = 2
         kmeans = KMeans(n_clusters=K).fit(np.asarray(es))
         labels = kmeans.labels_
 
         densest_cluster = np.argmax(np.bincount(labels))
-        cluster_points = points[labels == densest_cluster]
+        cluster_points = es_points[labels == densest_cluster]
         centroid = kmeans.cluster_centers_[densest_cluster]
 
         closest_point = cluster_points[np.argmin(np.linalg.norm(cluster_points - centroid, axis=1))]
