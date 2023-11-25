@@ -97,8 +97,8 @@ class Pipeline:
 
     def loss_with_acc(self,out,out_p,out_p2, y,x):
         return (1.0 *self.criterion(out[:,0:3], y[:,0:3]) + 0.2*self.criterion(out[:,3:7], y[:,3:7]) 
-        + 0.03*self.criterion(2*out[:,0:3], out_p2[:,0:3]+out_p[:,0:3]) +
-         0.01*self.criterion(2*out[:,3:7], out_p2[:,3:7]+out_p[:,3:7]))
+        + 0.03*self.criterion(out[:,0:3]+ out_p2[:,0:3], 2.0* out_p[:,0:3]) +
+         0.01*self.criterion(out[:,3:7] + out_p2[:,3:7], 2.0* out_p[:,3:7]))
 
     def lossinTraj(self, init_state, x_traj, y_traj,r_error):
         loss = torch.tensor(0.0).to(self.model.device)
@@ -171,8 +171,8 @@ class Pipeline:
 
         # i=0
 
-        best_loss = 0.09986
-        max_norm =0.05
+        best_loss = 0.07
+        max_norm =0.1
 
         for epoch in range(100):
 
