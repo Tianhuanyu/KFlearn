@@ -131,26 +131,26 @@ class RegistrationData:
 
         # print("Point 1 {0}".format(self._pq_dst[0][0]))
         # print("Point 1_gt {0}".format(self.ground_truth[0][0]))
-        e_avgs = []
-        e_maxs = []
-        e_dens = []
-        for i in range(len(self._pq_dst)):
-            e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
+        # e_avgs = []
+        # e_maxs = []
+        # e_dens = []
+        # for i in range(len(self._pq_dst)):
+        #     e_avg, e_max = RegistrationData.find_errors_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
 
-            e_den = RegistrationData.find_mass_center_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
-            print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
-            print(" e_dens = {0}  ".format(e_den))
-            e_avgs.append(e_avg)
-            e_maxs.append(e_max)
-            e_dens.append(e_den)
+        #     e_den = RegistrationData.find_mass_center_of_two_traj(self._pq_dst[i], self.ground_truth[i],self.reproj_error[i])
+        #     print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
+        #     print(" e_dens = {0}  ".format(e_den))
+        #     e_avgs.append(e_avg)
+        #     e_maxs.append(e_max)
+        #     e_dens.append(e_den)
 
-        print("np.std(e_avgs) = ", np.std(e_avgs))
-        print("np.std(e_maxs) = ", np.std(e_maxs))
-        print("np.mean(e_avgs) = ", np.mean(e_avgs))
-        print("np.mean(e_maxs) = ", np.mean(e_maxs))
+        # print("np.std(e_avgs) = ", np.std(e_avgs))
+        # print("np.std(e_maxs) = ", np.std(e_maxs))
+        # print("np.mean(e_avgs) = ", np.mean(e_avgs))
+        # print("np.mean(e_maxs) = ", np.mean(e_maxs))
 
-        print("np.std(e_dens) = ", np.std(e_dens))
-        print("np.mean(e_dens) = ", np.mean(e_dens))
+        # print("np.std(e_dens) = ", np.std(e_dens))
+        # print("np.mean(e_dens) = ", np.mean(e_dens))
 
         # print(" e_avg, e_max = {0}   {1}".format(e_avg, e_max))
         if(is_outlier_removed):
@@ -748,24 +748,27 @@ class RegistrationData:
     @staticmethod
     def view_channels(*measurements_list):
         plt.figure()
+        K = len(DISPLAY)
         for i, measurements in enumerate(measurements_list):
-            pos = [[] for i in range(7)]
+            pos = [[] for i in range(len(DISPLAY))]
             for mes in measurements:
-                pos[0].append(mes[DISPLAY[0]])
-                pos[1].append(mes[DISPLAY[1]])
-                pos[2].append(mes[DISPLAY[2]])
-
-            plt.subplot(3, 1, 1)  # 三行一列，当前激活的是第一个图
-            plt.plot(pos[0])  # '-r' 表示红色实线
+                for i in range(len(DISPLAY)):
+                    pos[i].append(mes[DISPLAY[i]])
+                    # pos[1].append(mes[DISPLAY[1]])
+                    # pos[2].append(mes[DISPLAY[2]])
+        
+        for j in range(K):
+            plt.subplot(K+1, 1, j+1)  # 三行一列，当前激活的是第一个图
+            plt.plot(pos[j])  # '-r' 表示红色实线
             # plt.legend(loc='traj'+str(i))
 
-            plt.subplot(3, 1, 2)  # 三行一列，当前激活的是第一个图
-            plt.plot(pos[1])  # '-r' 表示红色实线
-            # plt.legend(loc='traj'+str(i))
+            # plt.subplot(3, 1, 2)  # 三行一列，当前激活的是第一个图
+            # plt.plot(pos[1])  # '-r' 表示红色实线
+            # # plt.legend(loc='traj'+str(i))
 
-            plt.subplot(3, 1, 3)  # 三行一列，当前激活的是第一个图
-            plt.plot(pos[2])  # '-r' 表示红色实线
-            # plt.legend(loc='traj'+str(i))
+            # plt.subplot(3, 1, 3)  # 三行一列，当前激活的是第一个图
+            # plt.plot(pos[2])  # '-r' 表示红色实线
+            # # plt.legend(loc='traj'+str(i))
         # 自动调整子图间距
         plt.tight_layout()
         # 显示图形

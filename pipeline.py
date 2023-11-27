@@ -191,6 +191,9 @@ class Pipeline:
 
                 loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj,re_error)
 
+                loss = loss/torch.tensor(x_traj.size()[0]).to(self.model.device)
+                loss_c = loss_c/torch.tensor(x_traj.size()[0]).to(self.model.device)
+
 
                 loss.backward(retain_graph=True)
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm)
@@ -269,11 +272,48 @@ class Pipeline:
                 print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}  x_traj {x_traj.shape}')
             val_loss /= len(data_test)
 
+        return xs_list, ys_list, os_list
 
-        # print(os_list)
-        # print("len = ", len(os_list[0]))
+
+    def ValidModelwithpth(self, pth, update_period=None):
+        if(pth):
+            self.model.load_state_dict(torch.load(pth))
+            self.model.eval()
+
+        data_test = DataLoader(self.data_loader_valid,
+                batch_size=1, 
+                shuffle=True, 
+                num_workers=self.args.num_workers)
+
+        # print(" len(data_test) = ",len(data_test))
+        with torch.no_grad():
+            val_loss = 0.0
+            val_loss_c = 0.0
+            xs_list = []
+            ys_list = []
+            os_list = []
+            for tj_id, (_x_traj, _y_traj) in enumerate(data_test):
+                x_traj = _x_traj.permute(1, 2, 0).to(self.model.device)
+                y_traj = _y_traj.permute(1, 2, 0).to(self.model.device)
+
+
+                init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                re_error = x_traj[0,7,:].unsqueeze(0).unsqueeze(0).permute(2, 1, 0)
+
+                loss, loss_c,xs, ys, os = self.outputinTraj(init_state, x_traj, y_traj,update_period,re_error)
+                val_loss += loss
+                val_loss_c += loss_c
+                xs_list.append(xs)
+                ys_list.append(ys)
+                os_list.append(os)
+
+                print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}  x_traj {x_traj.shape}')
+            val_loss /= len(data_test)
 
         return xs_list, ys_list, os_list
+
+
+
 
     def outputinTraj(self, init_state, x_traj, y_traj,update_period,repro_error):
         loss = torch.tensor(0.0).to(self.model.device)
