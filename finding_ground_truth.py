@@ -25,7 +25,7 @@ INDEX_FOR_REPROJ2 = 14
 accept_rate = 0.5
 SAMPLE_STEP = 30
 T_step = 0.01
-DISPLAY = [0,1,2]
+DISPLAY = [0,1,2,3,4,5,6]
 
 
 
@@ -757,9 +757,9 @@ class RegistrationData:
                     # pos[1].append(mes[DISPLAY[1]])
                     # pos[2].append(mes[DISPLAY[2]])
         
-        for j in range(K):
-            plt.subplot(K+1, 1, j+1)  # 三行一列，当前激活的是第一个图
-            plt.plot(pos[j])  # '-r' 表示红色实线
+            for j in range(K):
+                plt.subplot(K+1, 1, j+1)  # 三行一列，当前激活的是第一个图
+                plt.plot(pos[j])  # '-r' 表示红色实线
             # plt.legend(loc='traj'+str(i))
 
             # plt.subplot(3, 1, 2)  # 三行一列，当前激活的是第一个图
