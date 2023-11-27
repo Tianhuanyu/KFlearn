@@ -226,7 +226,7 @@ class Pipeline:
                     loss, loss_c = self.lossinTraj(init_state, x_traj, y_traj,re_error)
                     val_loss += loss
                     val_loss_c += loss_c
-                    print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}', flush=True)
+                    print(f'Epoch {epoch+1}, 111 Traj id {tj_id},Loss: {loss}, LossC {loss_c}', flush=True)
                 val_loss /= len(data_valid)
                 writer.add_scalar('Loss/valid', val_loss, epoch * len(data_valid) + tj_id)
 
@@ -269,7 +269,7 @@ class Pipeline:
                 ys_list.append(ys)
                 os_list.append(os)
 
-                print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}  x_traj {x_traj.shape}')
+                print(f' Traj id {tj_id},Loss: {loss}, LossC {loss_c}  x_traj {x_traj.shape}')
             val_loss /= len(data_test)
 
         return xs_list, ys_list, os_list
@@ -307,7 +307,7 @@ class Pipeline:
                 ys_list.append(ys)
                 os_list.append(os)
 
-                print(f' Traj id {tj_id},Loss: {val_loss}, LossC {val_loss_c}  x_traj {x_traj.shape}')
+                print(f' Traj id {tj_id},Loss: {loss}, LossC {loss_c}  x_traj {x_traj.shape}')
             val_loss /= len(data_test)
 
         return xs_list, ys_list, os_list

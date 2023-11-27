@@ -47,8 +47,9 @@ def main():
     #                 args=args)
 
     instance.setNNModel(KF_model)
-
-    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth')
+    
+    xs_list, ys_list, os_list = instance.ValidModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth')
+    # xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth')
     # xs_list, ys_list, os_list = instance.testModelwithpth(None)
     RegistrationData.view_channels(xs_list[0], ys_list[0])
     RegistrationData.view_channels(xs_list[0], ys_list[0], os_list[0])
