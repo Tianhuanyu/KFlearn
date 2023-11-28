@@ -83,7 +83,7 @@ class ESKF_Torch(torch.nn.Module):
         #reset
         self.prvious_error_state = self.error_state
         self.error_state = torch.zeros_like(self.error_state)
-        return self.predict_state
+        return self.state
     
 
     def get_state(self):
