@@ -43,7 +43,7 @@ def general_settings():
                         help='number of training steps (default: 1000)')
     parser.add_argument('--n_batch', type=int, default=150, metavar='N_B',
                         help='input batch size for training (default: 80)')
-    parser.add_argument('--n_seq', type=int, default=500, metavar='N_Se',
+    parser.add_argument('--n_seq', type=int, default=200, metavar='N_Se',
                         help='input batch size for training (default: 20)')
     parser.add_argument('--lr', type=float, default=1e-3, metavar='LR',
                         help='learning rate (default: 1e-3)')

@@ -83,7 +83,7 @@ class ESKF_Torch(torch.nn.Module):
         #reset
         self.prvious_error_state = self.error_state
         self.error_state = torch.zeros_like(self.error_state)
-        return self.state
+        return self.predict_state
     
 
     def get_state(self):
@@ -506,7 +506,7 @@ class KalmanNetOrigin(ESKF_Torch):
         self.h_Q = self.init_Q.reshape(1,1, -1).repeat(self.seq_len_input,self.batch_size, 1).to(self.device) # batch size expansion
 
 
-    def reset_state(self, init_state):
+    def reset_state(self, init_state, re_error=None):
         self.state = init_state
         self.covariance = torch.diag(torch.tensor([0.001]*3+
                             [0.002]*3, requires_grad=True)).to(self.device)

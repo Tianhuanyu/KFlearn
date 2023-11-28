@@ -10,6 +10,7 @@ import torch.optim as optim
 
 from torch.utils.tensorboard import SummaryWriter
 import copy
+import time
 
 
 class Pipeline:
@@ -275,7 +276,7 @@ class Pipeline:
         return xs_list, ys_list, os_list
 
 
-    def ValidModelwithpth(self, pth, update_period=None):
+    def ValidModelwithpth(self, pth, update_period=None, max_iter=None):
         if(pth):
             self.model.load_state_dict(torch.load(pth))
             self.model.eval()
@@ -287,30 +288,116 @@ class Pipeline:
 
         # print(" len(data_test) = ",len(data_test))
         with torch.no_grad():
-            val_loss = 0.0
-            val_loss_c = 0.0
-            xs_list = []
-            ys_list = []
-            os_list = []
+
+            lossps = []
+            lossqs = []
+            loss_cps = [] 
+            loss_cqs= [] 
+            loss_accps = []
+            loss_accqs = []
+            loss_accpxs = []
+            loss_accqxs = []
+            ts = []
+
             for tj_id, (_x_traj, _y_traj) in enumerate(data_test):
                 x_traj = _x_traj.permute(1, 2, 0).to(self.model.device)
                 y_traj = _y_traj.permute(1, 2, 0).to(self.model.device)
+
+                if(max_iter and tj_id>max_iter):
+                    break
 
 
                 init_state = x_traj[0,0:7,:].unsqueeze(0).permute(2, 1, 0)
                 re_error = x_traj[0,7,:].unsqueeze(0).unsqueeze(0).permute(2, 1, 0)
 
-                loss, loss_c,xs, ys, os = self.outputinTraj(init_state, x_traj, y_traj,update_period,re_error)
-                val_loss += loss
-                val_loss_c += loss_c
-                xs_list.append(xs)
-                ys_list.append(ys)
-                os_list.append(os)
+                start_time = time.time()
 
-                print(f' Traj id {tj_id},Loss: {loss}, LossC {loss_c}  x_traj {x_traj.shape}')
-            val_loss /= len(data_test)
+                lossp,lossq, loss_cp, loss_cq, loss_accp,loss_accq,loss_accpx,loss_accqx = self.outputinTrajpq(init_state, x_traj, y_traj,update_period,re_error)
 
-        return xs_list, ys_list, os_list
+                end_time = time.time()  # 记录结束时间
+                elapsed_time = end_time - start_time  # 计算所用时间        
+
+                lossps.append(lossp.cpu())
+                lossqs.append(lossq.cpu())
+                loss_cps.append(loss_cp.cpu()) 
+                loss_cqs.append(loss_cq.cpu()) 
+                loss_accps.append(loss_accp.cpu())
+                loss_accqs.append(loss_accq.cpu())
+                loss_accpxs.append(loss_accpx.cpu())
+                loss_accqxs.append(loss_accqx.cpu())
+                ts.append(elapsed_time)
+
+
+                print(f' Traj id {tj_id},Loss: {lossp}, LossC {loss_cp}  x_traj {x_traj.shape}  time={elapsed_time}')
+            # val_loss /= len(data_test)
+
+        return lossps, lossqs, loss_cps, loss_cqs, loss_accps, loss_accqs, loss_accpxs, loss_accqxs,ts
+    
+
+
+
+    def outputinTrajpq(self, init_state, x_traj, y_traj,update_period,repro_error):
+        lossp = torch.tensor(0.0).to(self.model.device)
+        loss_cp = torch.tensor(0.0).to(self.model.device)
+
+        lossq = torch.tensor(0.0).to(self.model.device)
+        loss_cq = torch.tensor(0.0).to(self.model.device)
+
+        loss_accp = torch.tensor(0.0).to(self.model.device)
+        loss_accq = torch.tensor(0.0).to(self.model.device)
+
+        loss_accpx = torch.tensor(0.0).to(self.model.device)
+        loss_accqx = torch.tensor(0.0).to(self.model.device)
+
+
+        out_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        out_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        x_p = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        x_p2 = torch.zeros_like(init_state).squeeze(2).to(self.model.device)
+        self.model.reset_state(init_state,repro_error)
+        # output_record_x = []
+        # output_record_y = []
+        # output_record_o = []
+        for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
+            if(update_period and ptid % int(update_period)== 0):
+                init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                repro_error = x_traj[ptid,7,:].unsqueeze(0).permute(2, 1, 0)
+                self.model.reset_state(init_state,repro_error)
+
+            # print("x = ",x)
+            # print("x = ", x.shape)
+            # raise ValueError("Run to here")
+            out = self.model(x).squeeze(2)
+
+            y = y.permute(1,0)
+            x = x.permute(1,0)
+
+            lossp += self.criterion(out[:,0:3], y[:,0:3])
+            lossq += self.criterion(out[:,3:7], y[:,3:7])
+
+
+            loss_cp += self.criterion(x[:,0:3], y[:,0:3])
+            loss_cq += self.criterion(x[:,3:7], y[:,3:7])
+
+            loss_accp += self.criterion(out[:,0:3]+out_p2[:,0:3], out_p[:,0:3]+out_p[:,0:3])
+            loss_accq += self.criterion(out[:,3:7]+out_p2[:,3:7], out_p[:,3:7]+out_p[:,3:7])
+
+            loss_accpx += self.criterion(x[:,0:3]+x_p2[:,0:3], x_p[:,0:3]+x_p[:,0:3])
+            loss_accqx += self.criterion(x[:,3:7]+x_p2[:,3:7], x_p[:,3:7]+x_p[:,3:7])
+
+            
+            out_p2 = out_p
+            out_p = out
+
+            x_p2 = x_p
+            x_p = x[:,0:7]
+
+            # output_record_x.append(x[:,0:7].squeeze().cpu().detach().numpy().tolist())
+            # output_record_y.append(y[:,0:7].squeeze().cpu().detach().numpy().tolist())
+            # output_record_o.append(out[:,0:7].squeeze().cpu().detach().numpy().tolist())
+            # print("RUn to here ptid = ",ptid)
+
+        return lossp,lossq, loss_cp, loss_cq, loss_accp,loss_accq,loss_accpx,loss_accqx
 
 
 
