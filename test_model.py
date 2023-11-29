@@ -78,39 +78,39 @@ def main():
     # print("loss mean = {0} lose std = {1}".format(pmean, pstd))
 
     # print()
-    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_500_0.0001_seq100_KFNET.pth')
+    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth')
 
-    """
-    ESKF
-    """
+    # """
+    # ESKF
+    # """
 
-    KF_model1 = ESKF_Torch(system_model= task_model,
-                    initial_state=ini_state,
-                    initial_covariance=ini_covariance,
-                    args=args)
+    # KF_model1 = ESKF_Torch(system_model= task_model,
+    #                 initial_state=ini_state,
+    #                 initial_covariance=ini_covariance,
+    #                 args=args)
     
-    instance.setNNModel(KF_model1)
+    # instance.setNNModel(KF_model1)
 
-    xs_list, ys_list, os_list1 = instance.testModelwithpth(None)
+    # xs_list, ys_list, os_list1 = instance.testModelwithpth(None)
 
 
-    """
-    Origin KalmanNet
+    # """
+    # Origin KalmanNet
     
-    """
+    # """
 
-    KF_model2 = KalmanNetOrigin(system_model= task_model,
-                        initial_state=ini_state,
-                        initial_covariance=ini_covariance,
-                        args=args,
-                        dt=T_fitler).cuda()
-    instance.setNNModel(KF_model2)
-    xs_list, ys_list, os_list2 = instance.testModelwithpth('best_model_0.001_200_0.0001_epoch1.pth')
+    # KF_model2 = KalmanNetOrigin(system_model= task_model,
+    #                     initial_state=ini_state,
+    #                     initial_covariance=ini_covariance,
+    #                     args=args,
+    #                     dt=T_fitler).cuda()
+    # instance.setNNModel(KF_model2)
+    # xs_list, ys_list, os_list2 = instance.testModelwithpth('best_model_0.001_200_0.0001_epoch1.pth')
 
 
 
     # RegistrationData.view_channels(xs_list[0], ys_list[0])
-    RegistrationData.view_channels(xs_list[0], ys_list[0], os_list1[0],os_list[0],os_list2[0])
+    RegistrationData.view_channels(xs_list[0], ys_list[0],os_list[0])
 
 
     for name, param in KF_model.named_parameters():
