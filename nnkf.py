@@ -35,8 +35,9 @@ class ESKF_Torch(torch.nn.Module):
         # raise ValueError("123")
         # self.error_state = self.system_model.reset_error_state(self.state, self._dt,control_vector)
 
-        self.error_state_prior = F @ self.error_state + B @ control_vector    #self._propagate_state(F, gyro_measurement)
-        self.predict_state = self.system_model._state_injection(self._dt,self.state, self.error_state_prior).to(self.device)
+        # self.error_state_prior = F @ self.error_state + B @ control_vector    #self._propagate_state(F, gyro_measurement)
+        self.error_state_prior =  B @ control_vector
+        self.predict_state = self.system_model._state_injection(self._dt,self.predict_state, self.error_state_prior).to(self.device)
         self.covariance = self.system_model._propagate_covariance(F, Q, self.covariance).to(self.device)
 
     def update(self, measurement):
@@ -83,7 +84,7 @@ class ESKF_Torch(torch.nn.Module):
         #reset
         self.prvious_error_state = self.error_state
         self.error_state = torch.zeros_like(self.error_state)
-        return self.state
+        return self.predict_state
     
 
     def get_state(self):
@@ -94,11 +95,11 @@ class ESKF_Torch(torch.nn.Module):
         self.covariance = torch.diag(torch.tensor([0.001]*3+
                             [0.002]*3, requires_grad=True)).to(self.device)
         
-        diag_matrix_P = torch.diag(torch.tensor([0.01]*3+
-                            [0.002]*3, requires_grad=True)).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
+        diag_matrix_P = torch.diag(torch.tensor([0.0001]*3+
+                            [0.0002]*3, requires_grad=True)).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
         diag_matrix_R = torch.diag(torch.tensor(
-                [1000.0]*3+
-                            [1000.0]*4, requires_grad=True)
+                [0.000001]*3+
+                            [0.00000001]*4, requires_grad=True)
             ).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
         T_fitler = torch.tensor(0.01)
         self.reset_init_state(init_state, 
@@ -446,7 +447,7 @@ class KalmanNetOrigin(ESKF_Torch):
             min_mag = torch.zeros_like(INOV).to(self.device)
 
             max_mag = torch.tensor([
-                    0.001, 0.001, 0.001, 0.2, 0.2, 0.2
+                    0.005, 0.005, 0.005, 0.2, 0.2, 0.2
                 ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
             # min_mag = -1.0*max_mag
 

@@ -128,6 +128,8 @@ class RegistrationData:
         """
         # RegistrationData.view_Cartesian_pose(self._pq_dst[0], self.ground_truth[0])
         # RegistrationData.view_channels(self._pq_dst[0], self.ground_truth[0])
+        # self._twist[0] = [(np.asarray(item)/50.0).tolist() for item in self._twist[0]]
+        # RegistrationData.view_channels(self._twist_fromsensor[0], self._twist[0])
 
         # print("Point 1 {0}".format(self._pq_dst[0][0]))
         # print("Point 1_gt {0}".format(self.ground_truth[0][0]))
@@ -760,6 +762,7 @@ class RegistrationData:
             for j in range(K):
                 plt.subplot(K+1, 1, j+1)  # 三行一列，当前激活的是第一个图
                 plt.plot(pos[j])  # '-r' 表示红色实线
+                plt.grid(True)
             # plt.legend(loc='traj'+str(i))
 
             # plt.subplot(3, 1, 2)  # 三行一列，当前激活的是第一个图

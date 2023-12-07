@@ -32,12 +32,15 @@ def main():
     KF_model.load_state_dict(torch.load(pth))
     KF_model.eval()
 
-    init_state = torch.tensor([0.0]*7).cuda()
-
-    KF_model.reset_state(init_state)
+    init_state = torch.tensor([0.0]*3+[1.0]+[0.0]*3).unsqueeze(0).unsqueeze(2).cuda()
 
     x = torch.tensor([0.0]*14).unsqueeze(1).cuda()
+    print(x)
+    repro_error = x[7,:].unsqueeze(0).unsqueeze(2)
 
+    KF_model.reset_state(init_state,repro_error)
+
+    print(x.shape)
     out = KF_model(x)
 
     print(out)
