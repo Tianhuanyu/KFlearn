@@ -843,7 +843,7 @@ class KalmanNet(KalmanNetV2):
         # raise ValueError("Run to here")
         # print("measurement = ",measurement[:,4,:])
 
-        mask = torch.norm(measurement[:,4,0])>0.1
+        mask = torch.norm(measurement[:,3,0])>0.1
         # print("self.state = ",self.state[mask,:,:])
         # print("measurement = ",mask)
         # if(torch.norm(measurement[0,4,0])>0.1):
