@@ -55,7 +55,8 @@ def main():
 
     # xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth')
     # lossp,lossq, loss_cp, loss_cq, loss_accp,loss_accq,loss_accpx,loss_accqx,ts =instance.ValidModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth',max_iter=1000)
-    # lossp,lossq, loss_cp, loss_cq, loss_accp,loss_accq,loss_accpx,loss_accqx,ts =instance.ValidModelwithpth('best_model.pth', max_iter=100)
+    # lossp,lossq, loss_cp, loss_cq, loss_accp,loss_accq,loss_accpx,loss_accqx,ts =instance.ValidModelwithpth('Dbest_model_0.001_150_0.0001_seq200_KFNET.pth', max_iter=100)
+    xs_list, ys_list, os_list = instance.testModelwithpth('Dbest_model_0.001_150_0.0001_seq200_KFNET.pth')
 
     # pmean, pstd = get_mean_std(lossp)
     # print("loss mean = {0} lose std = {1}".format(pmean, pstd))
@@ -78,7 +79,7 @@ def main():
     # print("loss mean = {0} lose std = {1}".format(pmean, pstd))
 
     # print()
-    xs_list, ys_list, os_list = instance.testModelwithpth('Dbest_model_0.001_150_0.0001_seq200_KFNET.pth')
+    # xs_list, ys_list, os_list = instance.testModelwithpth('Dbest_model_0.001_150_0.0001_seq200_KFNET.pth')
 
     # """
     # ESKF

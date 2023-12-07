@@ -116,14 +116,14 @@ class Pipeline:
 
             if(torch.norm(x[4,:])<0.1):
                 init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
-                repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(2).permute(2, 1, 0)
+                repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(0).permute(2, 1, 0)
                 self.model.reset_state(init_state,repro_error)
             else:
                 pass
 
             out = self.model(x).squeeze(2)
 
-            
+
             out = self.model(x).squeeze(2)
 
             y = y.permute(1,0)
@@ -378,7 +378,18 @@ class Pipeline:
             # print("x = ",x)
             # print("x = ", x.shape)
             # raise ValueError("Run to here")
-            out = self.model(x).squeeze(2)
+            if (torch.any(torch.isnan(x))):
+                out = out_p
+            else:
+                # if(x[4,:])
+                if(torch.norm(x[4,:])<0.1):
+                    init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                    repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(2).permute(2, 1, 0)
+                    self.model.reset_state(init_state,repro_error)
+                else:
+                    pass
+
+                out = self.model(x).squeeze(2)
 
             y = y.permute(1,0)
             x = x.permute(1,0)

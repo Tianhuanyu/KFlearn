@@ -790,3 +790,72 @@ class KalmanNet(KalmanNetV2):
     def reset_state(self, init_state, re_error=None):
         self.state = init_state
         self.init_hidden_KNet(re_error)
+
+    
+
+    def KNet_step(self, x):
+
+        # Compute Priors
+        twist = x[8:14].unsqueeze(0).permute(2, 1, 0)
+        # self.predict(
+        #     control_vector = twist
+        # )
+
+
+        F = self.system_model._compute_state_transition_matrix(self._dt)
+        B = self.system_model._compute_control_matrix(self._dt,self.state)
+
+        # Q = self.init_Q
+        # Compute Kalman Gain
+        measurement = x[0:7].unsqueeze(0).permute(2,1,0)
+
+        self.error_state_prior = F @ self.error_state + B @ twist    #self._propagate_state(F, gyro_measurement)
+        # self.predict_state = self.system_model._state_injection(self._dt,self.state, self.error_state_prior)
+        # print("B @ twist = ",B @ twist)
+        self.predict_state = self.system_model._state_injection(self._dt,self.state, self.error_state_prior)
+
+        # print("measurement = ", measurement)
+        
+        self.step_KGain_est(measurement)
+        # Innovation
+        # dy = measurement - self.predict_state # [batch_size, n, 1]
+
+        dy = measurement-self.predict_state
+
+
+           # This is defination of obs_diff
+
+        # Compute the 1-st posterior moment
+        INOV = torch.bmm(self.KGain, dy)
+
+        if not self.training:
+            min_mag = torch.zeros_like(INOV).to(self.device)
+
+            max_mag = torch.tensor([
+                    0.005, 0.005, 0.005, 0.2, 0.2, 0.2
+                ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
+            # min_mag = -1.0*max_mag
+
+            sign = INOV.sign()
+            INOV = INOV.abs_().clamp_(min_mag, max_mag)
+            INOV =INOV* sign
+        # print("INOV = ",INOV)
+        # raise ValueError("Run to here")
+        print("measurement = ",measurement)
+
+        if(torch.norm(measurement[0,4,0])>0.1):
+            self.state = self.system_model._state_injection(self._dt,self.state, INOV)
+        else:
+            self.state = self.system_model._state_injection(self._dt,measurement, INOV)
+
+        
+
+        # print("INOV = ",INOV)
+        # print("self.state = ",self.state)
+        # raise ValueError("Run to here")
+        #reset
+        self.last_measurement = measurement
+        self.prvious_error_state = self.error_state
+        self.error_state = torch.zeros_like(self.error_state)
+        
+        return self.state
