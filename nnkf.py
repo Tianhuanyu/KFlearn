@@ -849,10 +849,11 @@ class KalmanNet(KalmanNetV2):
         # if(torch.norm(measurement[0,4,0])>0.1):
             
         # else:
-        self.state[mask,:,:] = self.state[mask,:,:]
-        self.state[~mask,:,:] = measurement[~mask,:,:]
+        # self.state[mask,:,:] = self.state[mask,:,:]
+        _state = self.state.clone()
+        _state[~mask,:,:] = measurement[~mask,:,:]
 
-        self.state = self.system_model._state_injection(self._dt,self.state, INOV)
+        self.state = self.system_model._state_injection(self._dt,_state, INOV)
         
 
         # print("INOV = ",INOV)
