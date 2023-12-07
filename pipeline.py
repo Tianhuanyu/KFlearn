@@ -172,7 +172,7 @@ class Pipeline:
 
         # i=0
 
-        best_loss = 0.1
+        best_loss = 0.2
         max_norm =0.1
 
         for epoch in range(100):
@@ -235,7 +235,7 @@ class Pipeline:
                 best_loss = val_loss
                 best_model_wts = copy.deepcopy(self.model.state_dict())
                 # 保存模型
-                torch.save(self.model.state_dict(), 'best_model_{0}_{1}_{2}_seq{3}_KFNET.pth'.format(self.args.lr, self.args.n_batch, self.args.wd, self.args.n_seq))
+                torch.save(self.model.state_dict(), 'Dbest_model_{0}_{1}_{2}_seq{3}_KFNET.pth'.format(self.args.lr, self.args.n_batch, self.args.wd, self.args.n_seq))
 
 
     def testModelwithpth(self, pth, update_period=None):

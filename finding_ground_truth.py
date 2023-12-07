@@ -449,6 +449,12 @@ class RegistrationData:
                     ori = point[ori_index[0]:ori_index[1]]
                     pos = point[pos_index[0]:pos_index[1]]
 
+                    if ori[0]<0.0:
+                        ori[0] = -ori[0]
+                        ori[1] = -ori[1]
+                        ori[2] = -ori[2]
+                        ori[3] = -ori[3]
+
                     if(reverse):
                         T44 = RegistrationData.from_pq2T44(pos,ori)
                         T44i = np.linalg.inv(T44)
