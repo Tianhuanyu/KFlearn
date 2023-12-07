@@ -172,7 +172,7 @@ class Pipeline:
 
         # i=0
 
-        best_loss = 0.07
+        best_loss = 0.1
         max_norm =0.1
 
         for epoch in range(100):
