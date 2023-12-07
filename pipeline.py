@@ -451,13 +451,13 @@ class Pipeline:
             if (torch.any(torch.isnan(x))):
                 out = out_p
             else:
-                # if(x[4,:])
-                if(torch.norm(x[4,:])<0.1):
-                    init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
-                    repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(2).permute(2, 1, 0)
-                    self.model.reset_state(init_state,repro_error)
-                else:
-                    pass
+                # # if(x[4,:])
+                # if(torch.norm(x[4,:])<0.1):
+                #     init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                #     repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(2).permute(2, 1, 0)
+                #     self.model.reset_state(init_state,repro_error)
+                # else:
+                #     pass
 
                 out = self.model(x).squeeze(2)
                 # print(x[4,:])

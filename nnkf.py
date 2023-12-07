@@ -841,13 +841,18 @@ class KalmanNet(KalmanNetV2):
             INOV =INOV* sign
         # print("INOV = ",INOV)
         # raise ValueError("Run to here")
-        print("measurement = ",measurement)
+        # print("measurement = ",measurement[:,4,:])
 
-        if(torch.norm(measurement[0,4,0])>0.1):
-            self.state = self.system_model._state_injection(self._dt,self.state, INOV)
-        else:
-            self.state = self.system_model._state_injection(self._dt,measurement, INOV)
+        mask = torch.norm(measurement[:,4,0])>0.1
+        # print("self.state = ",self.state[mask,:,:])
+        # print("measurement = ",mask)
+        # if(torch.norm(measurement[0,4,0])>0.1):
+            
+        # else:
+        self.state[mask,:,:] = self.state[mask,:,:]
+        self.state[~mask,:,:] = measurement[~mask,:,:]
 
+        self.state = self.system_model._state_injection(self._dt,self.state, INOV)
         
 
         # print("INOV = ",INOV)
