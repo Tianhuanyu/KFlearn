@@ -17,7 +17,7 @@ class Pipeline:
     def __init__(self, 
                  number_list_train:list = list(range(0,11)), 
                  number_list_valid:list = list(range(11,14)), 
-                 number_list_test:list = list(range(14,15)), 
+                 number_list_test:list = list(range(17,18)), 
                  modelName:str= "saved_state.csv",
                  args=None):
         self.sysModel = None
@@ -113,6 +113,17 @@ class Pipeline:
         for ptid, (x, y) in enumerate(zip(x_traj,y_traj)):
             # print("i =",i)
             # print("x = ",x)
+
+            if(torch.norm(x[4,:])<0.1):
+                init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(2).permute(2, 1, 0)
+                self.model.reset_state(init_state,repro_error)
+            else:
+                pass
+
+            out = self.model(x).squeeze(2)
+
+            
             out = self.model(x).squeeze(2)
 
             y = y.permute(1,0)
@@ -419,11 +430,9 @@ class Pipeline:
             if(update_period and ptid % int(update_period)== 0):
                 # try:
                 init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
-                # print("x_traj[ptid,7,:].unsqueeze(0)=",x_traj[ptid,7,:].unsqueeze(0))
                 repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(2).permute(2, 1, 0)
                 self.model.reset_state(init_state,repro_error)
-                # except RuntimeError:
-                #     print("repro_error= ",repro_error)
+
 
             # print("x = ",x)
             # print("x = ", x.shape)
@@ -431,15 +440,24 @@ class Pipeline:
             if (torch.any(torch.isnan(x))):
                 out = out_p
             else:
+                # if(x[4,:])
+                if(torch.norm(x[4,:])<0.1):
+                    init_state = x_traj[ptid,0:7,:].unsqueeze(0).permute(2, 1, 0)
+                    repro_error = x_traj[ptid,7,:].unsqueeze(0).unsqueeze(2).permute(2, 1, 0)
+                    self.model.reset_state(init_state,repro_error)
+                else:
+                    pass
+
                 out = self.model(x).squeeze(2)
+                # print(x[4,:])
             # if(out[0,0]==torch.tensor(float('nan'))):
             
 
             # 使用 torch.any() 检查是否存在任何 nan 值
-            if (torch.any(torch.isnan(out)) and is_first):
-                print("x = ",x.permute(1, 0))
-                print("out = ",out)
-                is_first = False
+            # if (torch.any(torch.isnan(out)) and is_first):
+            #     print("x = ",x.permute(1, 0))
+            #     print("out = ",out)
+            #     is_first = False
                 # print("out = {0}  {1}  {2}".format(out[0,0]==torch.tensor(float('nan')).to(self.model.device), type(out[0,0]), type(torch.tensor(float('nan')).to(self.model.device)) ))
             # print("out = ",type(out))
 

@@ -78,7 +78,7 @@ def main():
     # print("loss mean = {0} lose std = {1}".format(pmean, pstd))
 
     # print()
-    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_500_0.0001_seq100_KFNET.pth')
+    xs_list, ys_list, os_list = instance.testModelwithpth('Dbest_model_0.001_150_0.0001_seq200_KFNET.pth')
 
     # """
     # ESKF
