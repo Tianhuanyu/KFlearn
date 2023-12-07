@@ -25,7 +25,7 @@ INDEX_FOR_REPROJ2 = 14
 accept_rate = 0.5
 SAMPLE_STEP = 30
 T_step = 0.01
-DISPLAY = [0,1,2]
+DISPLAY = [3,4,5,6]
 
 
 

@@ -155,10 +155,11 @@ class RobotSensorFusion(SystemModel):
 
         R = self.quaternion_to_rotation_matrix(state[:,3:,:]).to(self.device)
 
-        S = -torch.eye(6).to(self.device)
+        S = torch.eye(6).to(self.device)
         S = S.repeat(self.n_batch, 1,1)
 
         S[:,:3,:3] = R
+        S[:,3:7,3:7] = R
 
 
         return S.to(self.device)*dt
