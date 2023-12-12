@@ -56,7 +56,9 @@ def main():
     # xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth')
     # lossp,lossq, loss_cp, loss_cq, loss_accp,loss_accq,loss_accpx,loss_accqx,ts =instance.ValidModelwithpth('best_model_0.001_150_0.0001_seq100_KFNET.pth',max_iter=1000)
     # lossp,lossq, loss_cp, loss_cq, loss_accp,loss_accq,loss_accpx,loss_accqx,ts =instance.ValidModelwithpth('Dbest_model_0.001_150_0.0001_seq200_KFNET.pth', max_iter=100)
-    xs_list, ys_list, os_list = instance.testModelwithpth('Dbest_model_0.001_150_0.0001_seq200_KFNET.pth')
+
+
+    xs_list, ys_list, os_list = instance.testModelwithpth('best_model_0.001_150_0.0001_seq200_KFNET.pth')
 
     # pmean, pstd = get_mean_std(lossp)
     # print("loss mean = {0} lose std = {1}".format(pmean, pstd))
@@ -95,23 +97,23 @@ def main():
     xs_list, ys_list, os_list1 = instance.testModelwithpth(None)
 
 
-    # """
-    # Origin KalmanNet
+    """
+    Origin KalmanNet
     
-    # """
+    """
 
-    # KF_model2 = KalmanNetOrigin(system_model= task_model,
-    #                     initial_state=ini_state,
-    #                     initial_covariance=ini_covariance,
-    #                     args=args,
-    #                     dt=T_fitler).cuda()
-    # instance.setNNModel(KF_model2)
-    # xs_list, ys_list, os_list2 = instance.testModelwithpth('Originbest_model_0.001_150_0.0001_seq200_KFNET.pth')
+    KF_model2 = KalmanNetOrigin(system_model= task_model,
+                        initial_state=ini_state,
+                        initial_covariance=ini_covariance,
+                        args=args,
+                        dt=T_fitler).cuda()
+    instance.setNNModel(KF_model2)
+    xs_list, ys_list, os_list2 = instance.testModelwithpth('Originbest_model_0.001_150_0.0001_seq200_KFNET.pth')
 
 
 
     # RegistrationData.view_channels(xs_list[0], ys_list[0])
-    RegistrationData.view_channels(xs_list[0], ys_list[0],os_list[0],os_list1[0])
+    RegistrationData.view_channels(xs_list[0], ys_list[0],os_list2[0],os_list1[0],os_list[0])
 
 
     for name, param in KF_model.named_parameters():

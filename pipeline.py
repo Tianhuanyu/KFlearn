@@ -17,7 +17,7 @@ class Pipeline:
     def __init__(self, 
                  number_list_train:list = list(range(0,11)), 
                  number_list_valid:list = list(range(11,14)), 
-                 number_list_test:list = list(range(17,18)), 
+                 number_list_test:list = list(range(14,15)), 
                  modelName:str= "saved_state.csv",
                  args=None):
         self.sysModel = None

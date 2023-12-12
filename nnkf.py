@@ -37,7 +37,7 @@ class ESKF_Torch(torch.nn.Module):
 
         # self.error_state_prior = F @ self.error_state + B @ control_vector    #self._propagate_state(F, gyro_measurement)
         self.error_state_prior =  B @ control_vector
-        self.predict_state = self.system_model._state_injection(self._dt,self.predict_state, self.error_state_prior).to(self.device)
+        self.predict_state = self.system_model._state_injection(self._dt,self.state, self.error_state_prior).to(self.device)
         self.covariance = self.system_model._propagate_covariance(F, Q, self.covariance).to(self.device)
 
     def update(self, measurement):
@@ -84,7 +84,7 @@ class ESKF_Torch(torch.nn.Module):
         #reset
         self.prvious_error_state = self.error_state
         self.error_state = torch.zeros_like(self.error_state)
-        return self.predict_state
+        return self.state
     
 
     def get_state(self):
@@ -93,13 +93,13 @@ class ESKF_Torch(torch.nn.Module):
     def reset_state(self, init_state, re_error=None):
         # self.state = init_state
         self.covariance = torch.diag(torch.tensor([0.001]*3+
-                            [0.002]*3, requires_grad=True)).to(self.device)
+                            [0.2]*3, requires_grad=True)).to(self.device)
         
         diag_matrix_P = torch.diag(torch.tensor([0.0001]*3+
                             [0.0002]*3, requires_grad=True)).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
         diag_matrix_R = torch.diag(torch.tensor(
                 [0.000001]*3+
-                            [0.00000001]*4, requires_grad=True)
+                            [0.0001]*4, requires_grad=True)
             ).unsqueeze(0).repeat(self.args.n_batch,1,1).to(self.device)
         T_fitler = torch.tensor(0.01)
         self.reset_init_state(init_state, 
@@ -443,17 +443,17 @@ class KalmanNetOrigin(ESKF_Torch):
         # Compute the 1-st posterior moment
         INOV = torch.bmm(self.KGain, dy)
 
-        if not self.training:
-            min_mag = torch.zeros_like(INOV).to(self.device)
+        # if not self.training:
+        #     min_mag = torch.zeros_like(INOV).to(self.device)
 
-            max_mag = torch.tensor([
-                    0.005, 0.005, 0.005, 0.2, 0.2, 0.2
-                ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
-            # min_mag = -1.0*max_mag
+        #     max_mag = torch.tensor([
+        #             0.005, 0.005, 0.005, 0.5, 0.5, 0.5
+        #         ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
+        #     # min_mag = -1.0*max_mag
 
-            sign = INOV.sign()
-            INOV = INOV.abs_().clamp_(min_mag, max_mag)
-            INOV =INOV* sign
+        #     sign = INOV.sign()
+        #     INOV = INOV.abs_().clamp_(min_mag, max_mag)
+        #     INOV =INOV* sign
         # print("INOV = ",INOV)
         # raise ValueError("Run to here")
 
@@ -832,7 +832,7 @@ class KalmanNet(KalmanNetV2):
             min_mag = torch.zeros_like(INOV).to(self.device)
 
             max_mag = torch.tensor([
-                    0.005, 0.005, 0.005, 0.2, 0.2, 0.2
+                    0.005, 0.005, 0.005, 0.1, 0.1, 0.1
                 ]).unsqueeze(0).unsqueeze(2).repeat(self.args.n_batch,1,1).to(self.device)*100.0
             # min_mag = -1.0*max_mag
 
@@ -843,7 +843,7 @@ class KalmanNet(KalmanNetV2):
         # raise ValueError("Run to here")
         # print("measurement = ",measurement[:,4,:])
 
-        mask = torch.norm(measurement[:,3,0])>0.1
+        mask = torch.norm(measurement[:,3,0])>0.9
         # print("self.state = ",self.state[mask,:,:])
         # print("measurement = ",mask)
         # if(torch.norm(measurement[0,4,0])>0.1):
@@ -851,7 +851,7 @@ class KalmanNet(KalmanNetV2):
         # else:
         # self.state[mask,:,:] = self.state[mask,:,:]
         _state = self.state.clone()
-        _state[~mask,:,:] = measurement[~mask,:,:]
+        _state[mask,:,:] = measurement[mask,:,:]
 
         self.state = self.system_model._state_injection(self._dt,_state, INOV)
         
